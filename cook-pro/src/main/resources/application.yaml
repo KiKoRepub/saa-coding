@@ -1,0 +1,8 @@
+server:
+  port: 13002
+spring:
+  config:
+    import:
+      - optional:classpath:.env[.properties]
+      - classpath:config/agent.yml
+      - classpath:config/vector.yml

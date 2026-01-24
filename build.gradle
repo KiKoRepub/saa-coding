@@ -1,0 +1,47 @@
+plugins {
+    id 'java'
+//    id "io.spring.dependency-management" version "1.0.9.RELEASE"
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    alibabaVersion = '1.1.0.0'
+    springBootVersion = '3.4.5'
+    lombokVersion = '1.18.22'
+    springDocVersion = '2.3.0'
+    springAiVersion = '1.1.0-M4'
+    mysqlVersion = '8.0.31'
+
+}
+
+dependencies {
+    implementation platform("org.springframework.ai:spring-ai-bom:${springAiVersion}")
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+}
+
+subprojects {
+
+    sourceCompatibility = 21
+    targetCompatibility = 21
+
+    repositories {
+        mavenCentral()
+
+    }
+
+
+}
+
+
+
+test {
+    useJUnitPlatform()
+}

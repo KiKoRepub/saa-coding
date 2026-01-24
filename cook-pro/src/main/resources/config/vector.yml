@@ -1,0 +1,28 @@
+spring:
+  ai:
+    vectorstore:
+      milvus:
+        client:
+          host: "localhost"
+          port: 19530
+          username: kiko
+          password: 123456
+        databaseName: "default"
+        collectionName: "agent_jk"  # 使用新集合名避免schema冲突
+        embeddingDimension: 768  # 修改为与embedding模型一致
+        indexType: IVF_FLAT
+        metricType: COSINE
+    model:
+      embedding: ollama
+      #        enabled: true
+    #        options:
+    #          model: BAAI/bge-m3
+    #          #          max-token: 512/
+    #          dimensions: 1536  # 修改为实际输出维度
+    #        api-key: ${SILICONFLOW_API_KEY}
+    #        base-url: https://api.siliconflow.cn
+    ollama:
+      embedding:
+        model: embeddinggemma # 768 dimensions
+        options:
+          model: embeddinggemma

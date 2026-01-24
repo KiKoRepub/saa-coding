@@ -1,0 +1,7 @@
+server:
+  port: 13001
+spring:
+  config:
+    import:
+      - optional:classpath:.env[.properties]
+      - classpath:config/agent.yml
