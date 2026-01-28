@@ -1,6 +1,7 @@
 package org.cookpro.exception;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.tool.execution.ToolExecutionException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -22,6 +23,5 @@ public class GlobalExceptionHandler{
 
         return ex.getMessage();
     }
-
 
 }

@@ -30,7 +30,7 @@ public class RAGMessagesHook extends MessagesModelHook {
 
     @Override
     public String getName() {
-        return "rag_messages_hook";
+        return getClass().getName();
     }
 
     @Override
@@ -48,6 +48,7 @@ public class RAGMessagesHook extends MessagesModelHook {
                         .topK(TOP_K)
                         .build()
         );
+
 
 // Step 2: 构建上下文
         String context = relevantDocs.stream()

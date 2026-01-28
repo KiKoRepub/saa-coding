@@ -10,18 +10,34 @@ repositories {
     mavenCentral()
 }
 
+
 ext {
     alibabaVersion = '1.1.0.0'
     springBootVersion = '3.4.5'
-    lombokVersion = '1.18.22'
-    springDocVersion = '2.3.0'
-    springAiVersion = '1.1.0-M4'
+
+
+
+
+    druidVersion = '1.2.23'
+    mybatisPlusVersion = '3.5.6'
     mysqlVersion = '8.0.31'
+
+    springAiVersion = '1.1.0-M4'
+
+    hutoolVersion = '5.8.37'
+    grpcVersion = '1.39.0'
+    lombokVersion = '1.18.30'
+    springDocVersion = '2.7.0'
+
+    minioVersion = '8.6.0'
 
 }
 
 dependencies {
-    implementation platform("org.springframework.ai:spring-ai-bom:${springAiVersion}")
+    implementation platform("io.grpc:grpc-bom:${grpcVersion}")
+
+    // Replace the following with the specific module dependencies (e.g., spring-ai-openai) or starter modules (e.g., spring-ai-starter-model-openai) that you wish to use
+
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
@@ -38,6 +54,9 @@ subprojects {
     }
 
 
+}
+compileJava {
+        options.encoding = 'UTF-8'
 }
 
 

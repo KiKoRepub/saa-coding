@@ -6,6 +6,7 @@ import org.springframework.ai.document.Document;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.Collections;
 import java.util.List;
 
 public class VectorStoreUtils {
@@ -16,7 +17,7 @@ public class VectorStoreUtils {
         JsonDocumentParser jsonDocumentParser = new JsonDocumentParser();
 
         List<Document> documents =  jsonDocumentParser.parse(new FileInputStream(filePath));
-
+        return Collections.emptyList();
     }
 
 

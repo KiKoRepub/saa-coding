@@ -8,7 +8,7 @@ spring:
           username: kiko
           password: 123456
         databaseName: "default"
-        collectionName: "agent_jk"  # 使用新集合名避免schema冲突
+        collectionName: "saa_recipe"  # 使用新集合名避免schema冲突
         embeddingDimension: 768  # 修改为与embedding模型一致
         indexType: IVF_FLAT
         metricType: COSINE

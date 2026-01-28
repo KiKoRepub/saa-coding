@@ -7,31 +7,59 @@ version '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
+
+    maven { url 'https://repo.spring.io/milestone' }
 }
 
 dependencies {
-
-
+    // 基础依赖
     implementation "org.springframework.boot:spring-boot-starter:${springBootVersion}"
     implementation "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
-//    implementation "org.springframework.ai:spring-ai-starter-model-ollama:${springBootVersion}"
 
+    // SAA 阿里云相关依赖
     implementation "com.alibaba.cloud.ai:spring-ai-alibaba-agent-framework:${alibabaVersion}"
     implementation "com.alibaba.cloud.ai:spring-ai-alibaba-starter-dashscope:${alibabaVersion}"
 
-    implementation "org.springframework.ai:spring-ai-starter-vector-store-milvus:${springAiVersion}"
 
+    // 数据库相关依赖
     implementation "mysql:mysql-connector-java:${mysqlVersion}"
-    implementation "org.projectlombok:lombok:${lombokVersion}"
+    implementation "com.alibaba:druid-spring-boot-starter:${druidVersion}"
+    implementation "com.baomidou:mybatis-plus-spring-boot3-starter:${mybatisPlusVersion}"
+
+    // Spring AI 相关依赖
+//    implementation "org.springframework.ai:spring-ai-rag:${springAiVersion}"
+    implementation "org.springframework.ai:spring-ai-advisors-vector-store:${springAiVersion}"
+    implementation "org.springframework.ai:spring-ai-starter-vector-store-milvus:${springAiVersion}"
+    implementation "org.springframework.ai:spring-ai-starter-model-ollama:${springAiVersion}"
+
+    // 其他工具依赖
+    compileOnly "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"  // ✅ 必须加上这行！
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springDocVersion}"
-
-
     implementation "cn.hutool:hutool-all:${hutoolVersion}"
+
+    // minio 依赖
+    implementation "io.minio:minio:${minioVersion}"
+
+
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 }
 
-test {
-    useJUnitPlatform()
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+// 强制使用 spring-ai-model 的特定版本，解决 milvus 的问题
+configurations.all {
+    resolutionStrategy {
+        resolutionStrategy {
+
+            force "org.springframework.ai:spring-ai-model:${springAiVersion}"
+
+        }
+    }
+
 }

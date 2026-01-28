@@ -2,3 +2,8 @@ spring:
       ai:
         dashscope:
           api-key: ${DASHSCOPE_CHAT_KEY}
+        ollama:
+          base-url: http://localhost:11434
+          embedding:
+            options:
+              model: embeddinggemma

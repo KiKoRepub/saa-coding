@@ -6,3 +6,5 @@ spring:
       - optional:classpath:.env[.properties]
       - classpath:config/agent.yml
       - classpath:config/vector.yml
+      - classpath:config/mysql.yml
+      - classpath:config/minio.yml
