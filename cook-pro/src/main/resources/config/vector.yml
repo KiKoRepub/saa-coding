@@ -12,6 +12,7 @@ spring:
         embeddingDimension: 768  # 修改为与embedding模型一致
         indexType: IVF_FLAT
         metricType: COSINE
+        id-field-name: id
     model:
       embedding: ollama
       #        enabled: true

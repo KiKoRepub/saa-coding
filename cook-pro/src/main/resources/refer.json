@@ -1,0 +1,143 @@
+{
+  node =__END__,
+  agent=human_in_loop_agent,
+  tokenUsage=DefaultUsage{
+  promptTokens=1871,
+  completionTokens=727, totalTokens=2598
+  }, state={
+    "OverAllState": {
+      "data": {
+        "input": "考虑调用工具，帮我看看可乐鸡翅的配方",
+        "messages": [
+          {
+            "messageType": "USER",
+            "metadata": {
+              "messageType": "USER"
+            },
+            "media": [],
+            "text": " "
+          },
+          {
+            "messageType": "USER",
+            "metadata": {
+              "messageType": "USER"
+            },
+            "media": [],
+            "text": "考虑调用工具，帮我看看可乐鸡翅的配方"
+          },
+          {
+            "messageType": "ASSISTANT",
+            "metadata": {
+              "finishReason": "TOOL_CALLS",
+              "search_info": "",
+              "role": "ASSISTANT",
+              "id": "264cd219-a78e-4557-a879-7dc71dedd452",
+              "messageType": "ASSISTANT",
+              "reasoningContent": ""
+            },
+            "toolCalls": [
+              {
+                "id": "call_7e4ac438a7594fe19a6154",
+                "type": "function",
+                "name": "google_web_search",
+                "arguments": "{\"arg0\": \"可乐鸡翅 配方\", \"arg1\": 5}"
+              }
+            ],
+            "media": [],
+            "text": ""
+          },
+          {
+            "messageType": "TOOL",
+            "metadata": {
+              "messageType": "TOOL"
+            },
+            "responses": [
+              {
+                "id": "call_7e4ac438a7594fe19a6154",
+                "name": "google_web_search",
+                "responseData": ""
+              }
+            ],
+            "text": ""
+          },
+          {
+            "messageType": "ASSISTANT",
+            "metadata": {
+              "finishReason": "STOP",
+              "search_info": "",
+              "role": "ASSISTANT",
+              "id": "30df8e57-0150-4ade-b856-42dde17d0d63",
+              "messageType": "ASSISTANT",
+              "reasoningContent": ""
+            },
+            "toolCalls": [],
+            "media": [],
+            "text": ""
+          }
+        ]
+      }
+    }
+  }, subGraph=false
+}
+
+
+{
+  "question": "可乐鸡翅 配方",
+  "result": {
+    "position": 1,
+    "title": "零失败可乐鸡�?!手残党也能秒变大�?,香到舔手指 ",
+    "link ": "https://baijiahao.baidu.com/s?id=1848496521293215736&wfr=spider&for=pc ",
+    "displayed_link ": "天然力的美食频道 ",
+    "snippet ": "如果你实在�?�腥，或者时间紧，焯水也可以：鸡翅冷水下锅，加几片姜和一点料酒，煮开后撇去浮沫，再煮2分钟捞出用温水冲洗干�?。但相信我，试试直接煎，你会打开新世界的大门！步�?3：见证奇迹的时刻—�?��?�入灵魂可乐 当鸡翅两面都煎得金灿灿的时�?�，把姜片和葱段丢进去，�?单翻炒几下，炒出香味。接下来，就�?... ",
+    "snippet_highlighted_words ": [
+      "焯水也可以：鸡翅冷水下锅，加几片姜和�?点料酒，煮开后撇去浮沫，再煮2分钟捞出用温水冲洗干�? "
+    ],
+    "date ": "2025�?11�?11日 ",
+    "thumbnail ": "https://t7.baidu.com/it/u=968932490,1678939288&fm=3035&app=3035&size=re3,2&q=75&n=0&g=4n&f=JPEG&fmt=auto&maxorilen2heic=2000000?s=89B253940A407AC66BA254E50300706A "
+  },
+  {
+    "position ": 2,
+    "title ": "可乐鸡翅怎么做_可乐鸡翅的做法_豆果美食 ",
+    "link ": "https://m.douguo.com/cookbook/2969482.html ",
+    "displayed_link ": "豆果美食 ",
+    "snippet ": "可乐鸡翅的用�? 可乐鸡翅的做�? 步骤1 准备鸡翅�?500�?,翅中现在也的确挺贵的可乐500毫升,远航就不展示�?,做菜之前偷偷喝了几口 步骤2 配件有姜3�?,�?3�?,�?个残缺不全的八角�?�? 步骤3 鸡翅冷水下锅,加姜�?,料酒煮出�?�?,姜片,料酒都是去腥�?,�?锅煮2分钟就可以�?? 步骤4 �?锅后边煮边打�?�?,�?会儿�?... ",
+    "snippet_highlighted_words ": [
+      "可乐鸡翅 "
+    ]
+  },
+  {
+    "position ": 3,
+    "title ": "�?单的可乐鸡翅～好吃到舔手～小朋友的最爱 ",
+    "link ": "https://baijiahao.baidu.com/s?id=1732913505055187966&wfr=spider&for=pc ",
+    "displayed_link ": "豆果美食 ",
+    "snippet ": "可乐 1碗鸡�? 12个盐 适量酱油 �?小勺老抽 1/2勺料�? 3勺姜 4片蚝�? 1/4勺蒜�? 3�? 做法步骤 1、鸡翅洗�?打花�?，冷水下锅，放入生姜、料酒，煮开�?分钟（ps：有浮沫�?水漂浮就可以了，煮久了肉质容易松化�?�）捞出洗净浮沫�?水，沥干水份备用�?2、锅中放点油、蒜瓣�?�姜片，下锅正面朝下，小火慢煎�?� ",
+    "snippet_highlighted_words ": [
+      "可乐 ",
+      "鸡翅 "
+    ],
+    "date ": "2022�?5�?16日 ",吗
+    "thumbnail ": "https://t8.baidu.com/it/u=3868918679,2112392658&fm=3035&app=3035&size=re3,2&q=75&n=0&g=4n&f=JPEG&fmt=auto&maxorilen2heic=2000000?s=B4AAF114DE617C86463114D90300E092 "
+  },
+  {
+    "position ": 4,
+    "title ": "可乐鸡翅做法 ",
+    "link ": "https://quanmin.baidu.com/sv?source=share-h5&pd=qm_share_search&vid=4977140302496131327 ",
+    "displayed_link ": "百家号 ",
+    "snippet ": "可乐鸡翅做法以后孩子要是想吃鸡翅�? 你就像我这样做个可乐鸡翅 鲜嫩入味�?单又好吃 首先把鸡翅扎几个孔更容易入味 然后冷水下锅 加葱�? 料酒去腥 �?5分钟捞出 煎至两面金黄 然后放葱姜丝八角 适量冰糖 多一点生�? �?丢丢老抽 再�?�入可乐没过鸡翅 ",
+    "snippet_highlighted_words ": [
+      "可乐鸡翅 "
+    ],
+    "date ": "2023�?12�?18日 ",
+    "thumbnail ": "https://t13.baidu.com/it/u=4132937046,3015074816&fm=225&app=113&size=re3,2&q=75&n=0&g=4n&f=JPEG&fmt=auto&maxorilen2heic=2000000?s=9FB7FCA60AF2BECC441A04AD0300E00B "
+  },
+  {
+    "position ": 5,
+    "title ": "可乐鸡翅的做法_菜谱_香哈网 ",
+    "link ": "https://m.xiangha.com/caipu/6162892.html ",
+    "displayed_link ": "香哈网 ",
+    "snippet ": "4/7此时放入葱姜蒜各10�?,煸炒出香味�?? 5/7放半罐可�?,待可乐烧�?加�?�抽10�?,生抽10�?,鸡粉3�?,�?3�?,味精3�?,胡椒�?3�?,翻炒均匀�? 6/7�?后大火收�?,待汤汁浓�?,充分包裹鸡翅后关火�?? 7/7撒葱花装�?,�?道美味可�?,色香味俱全的可乐鸡翅就展现在大家面前了�?� ",
+    "snippet_highlighted_words ": [
+      "可乐鸡翅 "
+    ]
+  }
+}

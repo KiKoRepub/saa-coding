@@ -37,11 +37,13 @@ dependencies {
     annotationProcessor "org.projectlombok:lombok:${lombokVersion}"  // ✅ 必须加上这行！
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springDocVersion}"
     implementation "cn.hutool:hutool-all:${hutoolVersion}"
+    implementation "com.squareup.okhttp3:okhttp:4.12.0"
 
     // minio 依赖
     implementation "io.minio:minio:${minioVersion}"
 
-
+    // redisson (RedisSaver 依赖)
+//    implementation 'org.redisson:redisson:3.52.0'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'

@@ -3,7 +3,6 @@ package org.cookpro.controller;
 import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatModel;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.annotation.Resource;
 import org.cookpro.R;
 import org.cookpro.dto.RecipeAddDTO;
@@ -15,6 +14,7 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 
 @RestController
 @RequestMapping("/rag")
@@ -29,25 +29,7 @@ public class RAGController {
     @Resource
     RecipeRAGService recipeRAGService;
 
-    @GetMapping("/test")
-    public void testRAG(){
-        // 在 agent 执行前 查询向量数据库，获取相关文档，并将其添加到消息中
-        // 创建带有 RAG Hook 的 Agent
-        ReactAgent ragAgent = ReactAgent.builder()
-                .name("rag_agent")
-                .model(chatModel)
-                .hooks(new RAGMessagesHook(vectorStore))
-                .build();
 
-        // 调用 Agent
-        try {
-            AssistantMessage response = ragAgent.call("番茄炒蛋应该怎么制作？");
-            System.out.println("答案: " + response.getText());
-        }catch (Exception e){
-            throw new ChatException("RAG 聊天失败: " + e.getMessage(), e);
-        }
-
-    }
 
 
     @PostMapping(value = "/addRecipe")

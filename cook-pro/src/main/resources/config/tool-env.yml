@@ -1,0 +1,6 @@
+tool-env:
+  web-search:
+    google:
+      api-key: ${GOOGLE_WEB_SEARCH_API_KEY}
+    bocha:
+      api-key: ${BOCHA_WEB_SEARCH_API_KEY}

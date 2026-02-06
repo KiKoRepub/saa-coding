@@ -3,6 +3,7 @@ package org.cookpro.config;
 import io.minio.MinioClient;
 import io.minio.SetBucketPolicyArgs;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.cookpro.config.properties.MinIoProperties;
 import org.cookpro.enums.MinioBucketEnum;
 import org.cookpro.service.FileUploadService;
@@ -15,7 +16,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
+
 
 @Slf4j
 @Component
