@@ -7,6 +7,7 @@ import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import com.alibaba.cloud.ai.graph.agent.hook.hip.HumanInTheLoopHook;
 import com.alibaba.cloud.ai.graph.agent.hook.hip.ToolConfig;
 import com.alibaba.cloud.ai.graph.checkpoint.savers.MemorySaver;
+import com.alibaba.cloud.ai.graph.checkpoint.savers.mysql.MysqlSaver;
 import org.cookpro.config.properties.ToolEnvProperties;
 import org.cookpro.tools.WebSearchTool;
 import org.springframework.ai.chat.model.ChatModel;

@@ -8,12 +8,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import org.cookpro.AgentBackground;
 import org.cookpro.R;
+import org.cookpro.dto.UserChattingDTO;
 import org.cookpro.exception.ChatException;
 import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
@@ -49,8 +47,11 @@ public class ChatController {
         }
     }
 
-
-
+    @PostMapping("/chatMore")
+    @Operation(summary = "与烹饪助手进行功能更多的聊天", description = "向烹饪助手发送消息列表，获取回复")
+    public R<String> chat(@RequestBody UserChattingDTO dto){
+        return R.ok("功能更多的聊天接口暂未实现，敬请期待！");
+    }
 
 
 }
