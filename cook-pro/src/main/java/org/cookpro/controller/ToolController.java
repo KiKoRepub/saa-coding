@@ -1,5 +1,6 @@
 package org.cookpro.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import jakarta.annotation.Resource;
 import org.cookpro.R;
 import org.cookpro.dto.ToolPageDTO;
@@ -19,7 +20,7 @@ public class ToolController {
 
 
     @PostMapping("/pageList")
-    public R<List<ToolPageListVo>> getTools(@RequestBody ToolPageDTO dto){
+    public R<Page<ToolPageListVo>> getTools(@RequestBody ToolPageDTO dto){
         return  R.ok(toolService.getToolPageList(dto));
     }
 

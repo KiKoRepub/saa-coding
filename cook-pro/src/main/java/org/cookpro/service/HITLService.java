@@ -18,9 +18,11 @@ import org.cookpro.dto.HITLPageDTO;
 import org.cookpro.dto.HITLReviewDTO;
 import org.cookpro.entity.HITLToolArgInfo;
 import org.cookpro.entity.HITLEntity;
+import org.cookpro.enums.HITLStatusEnum;
 import org.cookpro.mapper.HITLMapper;
 import org.cookpro.utils.HITLHelper;
 import org.cookpro.utils.SystemPrinter;
+import org.cookpro.vo.CommonEnumVo;
 import org.cookpro.vo.HITLPageVo;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.ai.chat.messages.AssistantMessage;
@@ -249,6 +251,20 @@ public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
 
             }
         }
+        return result;
+    }
+
+    public List<CommonEnumVo> getStatusList() {
+        List<CommonEnumVo> result = new LinkedList<>();
+        for (HITLStatusEnum value : HITLStatusEnum.values()) {
+            CommonEnumVo vo = new CommonEnumVo();
+
+            vo.setToShow(value.name());
+            vo.setToTransfer(value.description);
+
+            result.add(vo);
+        }
+
         return result;
     }
 }

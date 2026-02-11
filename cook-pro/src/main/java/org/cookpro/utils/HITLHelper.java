@@ -3,7 +3,10 @@ package org.cookpro.utils;
 import com.alibaba.cloud.ai.graph.OverAllState;
 import com.alibaba.cloud.ai.graph.action.InterruptionMetadata;
 import com.alibaba.cloud.ai.graph.agent.exception.AgentException;
+import com.alibaba.cloud.ai.graph.agent.hook.hip.HumanInTheLoopHook;
+import com.alibaba.cloud.ai.graph.agent.hook.hip.ToolConfig;
 import org.cookpro.entity.HITLToolArgInfo;
+import org.cookpro.entity.ToolEntity;
 import org.springframework.ai.chat.messages.AssistantMessage;
 
 import java.util.List;
@@ -11,6 +14,20 @@ import java.util.Optional;
 
 public class HITLHelper {
 
+
+
+    public static HumanInTheLoopHook buildHITLHook(List<ToolEntity> toolList){
+
+        HumanInTheLoopHook.Builder hookBuilder = HumanInTheLoopHook.builder();
+
+        for (ToolEntity toolEntity : toolList) {
+            hookBuilder.approvalOn(toolEntity.getToolName(), ToolConfig.builder()
+                    .description(toolEntity.getDescription())
+                    .build());
+        }
+
+        return hookBuilder.build();
+    }
     /**
      * 批准所有工具调用
      */

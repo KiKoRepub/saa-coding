@@ -5,9 +5,13 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
+@Data
 @TableName("tool")
-public class ToolEntity {
+@EqualsAndHashCode(callSuper = true)
+public class ToolEntity extends BaseEntity{
 
     @TableId(type = IdType.ASSIGN_ID)
     @Schema(description = "工具ID")
@@ -25,4 +29,10 @@ public class ToolEntity {
     @Schema(description = "HITL检查点，触发HITL的依据，比如输入内容、工具调用等")
     private String approveDescription;
 
+    @TableField("status")
+    @Schema(description = "工具状态，0-启用，1-禁用")
+    private Integer status;
+    @TableField("source")
+    @Schema(description = "工具来源，绑定 ToolSourceEnum")
+    private String source;
 }

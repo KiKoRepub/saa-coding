@@ -11,7 +11,10 @@ public class UserChattingDTO {
     @Schema(description = "用户输入的消息")
     private String message;
     @Schema(description = "使用的工具列表")
-    private List<String> toolNameList;
+    private List<Long> toolIdList;
+
+    @Schema(description = "用户id")
+    private Long userId;
     @Schema(description = "审核人id(触发HITL)")
     private Long reviewerId;
 

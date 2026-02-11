@@ -10,6 +10,7 @@ import org.cookpro.dto.HITLPageDTO;
 import org.cookpro.dto.HITLReviewDTO;
 import org.cookpro.entity.HITLToolArgInfo;
 import org.cookpro.service.HITLService;
+import org.cookpro.vo.CommonEnumVo;
 import org.cookpro.vo.HITLPageVo;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +29,11 @@ public class HITLController {
     public R<List<HITLToolArgInfo>> getToolArgInfo(@RequestParam("toolName")String toolName,
                                                    @RequestParam("id")Long id) throws JsonProcessingException {
         return R.ok(hitlService.getToolArgInfo(id,toolName));
+    }
+
+    @GetMapping("/getStatusList")
+    public R<List<CommonEnumVo>> getStatusList(){
+        return R.ok(hitlService.getStatusList());
     }
 
     @PostMapping("/publish/list")

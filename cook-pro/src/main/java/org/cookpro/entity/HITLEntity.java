@@ -42,8 +42,8 @@ public class HITLEntity extends BaseEntity{
     private String remark;
 
     @TableField("status")
-    @Schema(description = "审核状态 0-待审核 1-通过 2-不通过")
-    private Integer status;
+    @Schema(description = "审核状态")
+    private String status;
 
 }
 /*

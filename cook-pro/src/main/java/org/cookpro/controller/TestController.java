@@ -159,7 +159,6 @@ public class TestController {
             feedbackBuilder.addToolFeedback(approvedFeedback);
         });
 
-        InterruptionMetadata approvalMetadata = feedbackBuilder.build();
-        return approvalMetadata;
+        return feedbackBuilder.build();
     }
 }
