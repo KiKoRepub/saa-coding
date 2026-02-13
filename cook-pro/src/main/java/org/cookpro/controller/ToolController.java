@@ -1,6 +1,7 @@
 package org.cookpro.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.annotation.Resource;
 import org.cookpro.R;
 import org.cookpro.dto.ToolPageDTO;
@@ -23,5 +24,13 @@ public class ToolController {
     public R<Page<ToolPageListVo>> getTools(@RequestBody ToolPageDTO dto){
         return  R.ok(toolService.getToolPageList(dto));
     }
+
+    @PostMapping("/add")
+    @Operation(summary = "添加工具(需要鉴权)", description = "添加一个新的工具到系统中")
+    public R<String> addTool(){
+        return R.ok(toolService.addTool());
+    }
+
+
 
 }

@@ -19,6 +19,7 @@ import org.cookpro.dto.HITLReviewDTO;
 import org.cookpro.entity.HITLToolArgInfo;
 import org.cookpro.entity.HITLEntity;
 import org.cookpro.enums.HITLStatusEnum;
+import org.cookpro.enums.SSEEventEnum;
 import org.cookpro.mapper.HITLMapper;
 import org.cookpro.utils.HITLHelper;
 import org.cookpro.utils.SystemPrinter;
@@ -29,6 +30,7 @@ import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +49,9 @@ public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
     @Resource
     ThreadPoolExecutor asyncExecutor;
 
+    @Resource
+    SSEService sseService;
+
     public Page<HITLPageVo> getPublishPageList(HITLPageDTO dto) {
         Integer pageNum = dto.getPageNum();
         Integer pageSize = dto.getPageSize();
@@ -64,25 +69,43 @@ public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
         return getPageVoList(pageNum, pageSize, wrapper);
     }
 
-    public String reviewHitl(HITLReviewDTO dto) throws GraphRunnerException {
+    public String reviewHitl(HITLReviewDTO dto) throws GraphRunnerException, IOException, InterruptedException {
         Long id = dto.getId();
+
 
         HITLEntity hitlEntity = getById(id);
 
+
         String threadId = hitlEntity.getThreadId();
         InterruptionMetadata interruptionMetadata = hitlEntity.getInterruptData();
+        Long reviewerId = hitlEntity.getReviewerId();
+        Long publisherId = hitlEntity.getPublisherId();
 
         String message = dto.getMessage();
+        boolean approved = dto.isApproved();
 
         // 获取 审核结果
-        InterruptionMetadata approvalMetadata = getReviewResult(interruptionMetadata,dto.isApproved());
+        InterruptionMetadata approvalMetadata = getReviewResult(interruptionMetadata,approved);
+        if (approved){
+            sseService.sendMessage(reviewerId,publisherId,
+                    SSEEventEnum.REVIEW_PASSED.eventName,
+                    "您的人工介入请求已通过审核,正在恢复执行..."
+            );
+        }else {
+            sseService.sendMessage(reviewerId,publisherId,
+                    SSEEventEnum.REVIEW_REJECTED.eventName,
+                    "您的人工介入请求未通过审核,原因是:"+ dto.getReviewComment()
+            );
+        }
+
         // 创建恢复配置
         RunnableConfig resumeConfig = RunnableConfig.builder()
                 .threadId(threadId)
                 .addMetadata(RunnableConfig.HUMAN_FEEDBACK_METADATA_KEY, approvalMetadata)
                 .build();
         // 创建异步任务 恢复 执行
-        createAsyncTask(message, resumeConfig);
+        createAsyncTask(message, resumeConfig,
+                hitlEntity.getReviewerId(), hitlEntity.getPublisherId());
 
 
         return hitlEntity.getId().toString();
@@ -128,11 +151,14 @@ public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
 
         InterruptionMetadata editMetaData = builder.build();
 
+        RunnableConfig resumeConfig = RunnableConfig.builder()
+                .threadId(threadId)
+                .addMetadata(RunnableConfig.HUMAN_FEEDBACK_METADATA_KEY, editMetaData)
+                .build();
         createAsyncTask(message,
-                RunnableConfig.builder()
-                        .threadId(threadId)
-                        .addMetadata(RunnableConfig.HUMAN_FEEDBACK_METADATA_KEY, editMetaData)
-                        .build()
+                resumeConfig,
+                hitlEntity.getReviewerId(),
+                hitlEntity.getPublisherId()
         );
 
 
@@ -185,22 +211,28 @@ public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
         return hitlPageVo;
     }
 
-    private void createAsyncTask(String message, RunnableConfig resumeConfig) throws GraphRunnerException {
+    private void createAsyncTask(String message, RunnableConfig resumeConfig,Long userId,Long toId) throws GraphRunnerException {
         CompletableFuture.runAsync(() -> {
             try {
                 Optional<NodeOutput> finalResult = dashscopeHITLAgent.invokeAndGetOutput(message, resumeConfig);
 
                 if (finalResult.isPresent()) {
-                    //TODO 发送给 publisher
-                    SystemPrinter.println("执行完成");
-                    SystemPrinter.println("最终结果: " + finalResult.get());
 
                     AssistantMessage response = HITLHelper.getAssistantResponse(finalResult.get().state());
 
                     System.out.println(response.getText());
+
+                    sseService.sendMessage(userId,toId,
+                            SSEEventEnum.COMPLETED.eventName,
+                            "执行已完成,结果为: " + response.getText());
+
+
                 }
             } catch (GraphRunnerException e) {
                 log.error("异步恢复执行失败", e);
+                throw new RuntimeException(e);
+            } catch (IOException | InterruptedException e) {
+                log.error("sse 推送失败", e);
                 throw new RuntimeException(e);
             }
         }, asyncExecutor);

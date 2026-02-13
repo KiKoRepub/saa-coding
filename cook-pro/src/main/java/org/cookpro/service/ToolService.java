@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.cookpro.dto.ToolPageDTO;
 import org.cookpro.entity.ToolEntity;
@@ -19,7 +20,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
-
+@Slf4j
 @Service
 public class ToolService extends ServiceImpl<ToolMapper, ToolEntity> {
 
@@ -85,5 +86,12 @@ public class ToolService extends ServiceImpl<ToolMapper, ToolEntity> {
 
 
         return wrapper;
+    }
+
+    public String addTool() {
+        ToolEntity entity = new ToolEntity();
+
+        log.warn("正在添加工具..........");
+        return entity.getId().toString();
     }
 }

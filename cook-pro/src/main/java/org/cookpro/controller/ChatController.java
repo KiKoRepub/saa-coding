@@ -17,8 +17,10 @@ import org.cookpro.R;
 import org.cookpro.dto.UserChattingDTO;
 import org.cookpro.entity.HITLEntity;
 import org.cookpro.entity.ToolEntity;
+import org.cookpro.enums.SSEEventEnum;
 import org.cookpro.exception.ChatException;
 import org.cookpro.service.HITLService;
+import org.cookpro.service.SSEService;
 import org.cookpro.service.ToolService;
 import org.cookpro.utils.HITLHelper;
 import org.cookpro.utils.SystemPrinter;
@@ -48,6 +50,9 @@ public class ChatController {
     @Resource
     ToolFactory toolFactory;
 
+    @Resource
+    SSEService sseService;
+
 
     @GetMapping("/chat")
     @Operation(summary = "与烹饪助手聊天", description = "向烹饪助手发送消息，获取回复")
@@ -73,7 +78,7 @@ public class ChatController {
 
     @PostMapping("/chatMore")
     @Operation(summary = "与烹饪助手进行功能更多的聊天", description = "向烹饪助手发送消息列表，获取回复")
-    public R<String> chat(@RequestBody UserChattingDTO dto) throws GraphRunnerException {
+    public R<String> chat(@RequestBody UserChattingDTO dto) throws GraphRunnerException, IOException, InterruptedException {
 
         String message = dto.getMessage();
 
@@ -130,10 +135,13 @@ public class ChatController {
                 hitlEntity.setRemark(remarkBuilder.toString());
 
                 hitlService.save(hitlEntity);
+
                 //TODO 通知审核人 进行审核
-
+                sseService.sendMessage(userId,reviewerId, SSEEventEnum.WAITING_REVIEW.eventName,
+                        "您收到了一个新的人工审核请求，线程ID: " + agentThreadId + "，请尽快处理。");
                 //TODO 通知 发布者 目前的执行状态
-
+                sseService.sendMessage(userId,userId,SSEEventEnum.WAITING_REVIEW.eventName,
+                        "您的请求正在等待人工审核，线程ID: " + agentThreadId + "，请耐心等待。");
 
             }
 

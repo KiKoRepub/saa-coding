@@ -14,6 +14,7 @@ import org.cookpro.vo.CommonEnumVo;
 import org.cookpro.vo.HITLPageVo;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -47,7 +48,7 @@ public class HITLController {
     }
 
     @PostMapping("/review")
-    public R<String> review(@RequestBody HITLReviewDTO dto) throws GraphRunnerException {
+    public R<String> review(@RequestBody HITLReviewDTO dto) throws GraphRunnerException, IOException, InterruptedException {
         return R.ok(hitlService.reviewHitl(dto));
     }
 

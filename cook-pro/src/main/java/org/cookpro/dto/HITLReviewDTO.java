@@ -16,6 +16,4 @@ public class HITLReviewDTO {
     private boolean approved;
 
 
-
-
 }

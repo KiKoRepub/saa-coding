@@ -5,8 +5,8 @@ import lombok.Data;
 
 public class R <T> {
 
-    private T data;
-    private int code;
+    private final T data;
+    private final int code;
 
 
 
