@@ -86,7 +86,7 @@ public class RecipeRAGService{
 
 
 
-    public Document toDocument(Recipe recipe){
+    private Document toDocument(Recipe recipe){
         String content = toSearchableText(recipe);
         Map<String, Object> metadata = Map.of(
                 "id", UUID.randomUUID(),

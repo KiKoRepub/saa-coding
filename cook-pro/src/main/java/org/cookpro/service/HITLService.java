@@ -226,7 +226,6 @@ public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
                             SSEEventEnum.COMPLETED.eventName,
                             "执行已完成,结果为: " + response.getText());
 
-
                 }
             } catch (GraphRunnerException e) {
                 log.error("异步恢复执行失败", e);

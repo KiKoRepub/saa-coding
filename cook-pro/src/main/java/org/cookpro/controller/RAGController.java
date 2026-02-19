@@ -20,11 +20,6 @@ import java.nio.charset.Charset;
 @RequestMapping("/rag")
 public class RAGController {
 
-    @Resource
-    DashScopeChatModel chatModel;
-
-    @Resource
-    VectorStore vectorStore;
 
     @Resource
     RecipeRAGService recipeRAGService;
