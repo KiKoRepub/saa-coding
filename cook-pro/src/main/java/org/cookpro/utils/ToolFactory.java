@@ -3,6 +3,7 @@ package org.cookpro.utils;
 import jakarta.annotation.Resource;
 import org.cookpro.config.properties.ToolEnvProperties;
 import org.cookpro.entity.ToolEntity;
+import org.cookpro.enums.ToolSourceEnum;
 import org.cookpro.tools.AgenticRAGSearchTool;
 import org.cookpro.tools.WebSearchTool;
 import org.springframework.ai.support.ToolCallbacks;
@@ -39,13 +40,13 @@ public class ToolFactory {
 
         List<ToolCallback> result = new LinkedList<>();
         for (ToolEntity toolEntity : toolEntities) {
-            if (toolEntity.getSource() == 0){
+            if (ToolSourceEnum.IN_PROJECT.description.equals(toolEntity.getSource())){
                 // 内置工具
                 // 根据工具名获取工具实例
                 ToolCallback[] toolCallback = getTool(toolEntity.getToolName());
                 result.addAll(Arrays.stream(toolCallback).toList());
             }
-            if (toolEntity.getSource() == 1){
+            if (ToolSourceEnum.OUTSIDE.description.equals(toolEntity.getSource())){
                 // 外部自定义工具
                 System.out.println("外部自定义工具，暂不支持 ==> 工具名: "+toolEntity.getToolName());
                 // TODO 后续支持外部自定义工具，提供接口让用户上传工具的jar包，或者提供接口让用户编写工具的代码

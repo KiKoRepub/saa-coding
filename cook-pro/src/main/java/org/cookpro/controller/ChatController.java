@@ -25,7 +25,10 @@ import org.cookpro.service.ToolService;
 import org.cookpro.utils.HITLHelper;
 import org.cookpro.utils.ToolFactory;
 import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -110,6 +113,7 @@ public class ChatController {
                 .saver(new MemorySaver())
                 .build();
 
+
         Long userId = dto.getUserId();
 
 
@@ -118,12 +122,49 @@ public class ChatController {
                 .threadId(agentThreadId)
                 .build();
 
+/*
+        SseEmitter emitter = new SseEmitter();
+
+        try {
+            Flux<NodeOutput> flux = agent.stream(message, config);
+            flux.subscribe(
+                    data -> {
+                        try {
+                            emitter.send(data);
+                        } catch (IOException e) {
+                            emitter.completeWithError(e);
+                        }
+                    },
+                    error -> {
+                        try {
+                            emitter.send("聊天过程中发生错误: " + error.getMessage());
+                        } catch (IOException e) {
+                            emitter.completeWithError(e);
+                        }
+                    },
+                    () -> {
+                        try {
+                            emitter.send("聊天结束");
+                            emitter.complete();
+                        } catch (IOException e) {
+                            emitter.completeWithError(e);
+                        }
+                    });
+
+
+        }catch (Exception e){
+                throw new ChatException("聊天失败: " + e.getMessage(), e);
+        }*/
+
+
         Optional<NodeOutput> result = agent.invokeAndGetOutput(message,config);
 
         if (result.isPresent()) {
+            NodeOutput output = result.get();
 
-            handleHITL(dto, userId, agentThreadId, result.get());
-
+            if (output instanceof InterruptionMetadata interruptionMetadata) {
+                handleHITL(dto, userId, agentThreadId, interruptionMetadata);
+            }
             AssistantMessage response = HITLHelper.getAssistantResponse(result.get().state());
             return R.ok(response.getText());
         }
@@ -132,10 +173,62 @@ public class ChatController {
         }
     }
 
-    private void handleHITL(UserChattingDTO dto, Long userId, String agentThreadId, NodeOutput output) throws IOException, InterruptedException {
+    @PostMapping("/stream/chatMore")
+    @Operation(summary = "与烹饪助手进行功能更多的聊天（流式）", description = "向烹饪助手发送消息列表，获取回复（流式）")
+    public Flux<ServerSentEvent<NodeOutput>> streamChat(@RequestBody UserChattingDTO dto) throws GraphRunnerException, IOException, InterruptedException {
+        String message = dto.getMessage();
 
+
+        AgentBackground cookingAssistant = AgentBackground.COOKING_ASSISTANT;
+
+        List<ToolEntity> toolEntities = toolService.getToolEntities(dto.getToolIdList());
+        // 根据用户的选项，构建对应的 Hook 列表，并将其添加到 Agent 中
+
+        List<Hook> hookList = new LinkedList<>();
+        if (dto.getHitlEnabled()) {
+            hookList.add(HITLHelper.buildHITLHook(toolEntities));
+        }
+        if(dto.getUseRAG()){
+            hookList.add(ragService.getRAGMessagesHook());
+        }
+
+        ReactAgent agent = ReactAgent.builder()
+                .name(cookingAssistant.name())
+                .model(chatModel)
+                .outputType(String.class)
+                .hooks(hookList)
+                .systemPrompt(cookingAssistant.systemPrompt)
+                .tools(toolFactory.selectTools(toolEntities))
+                .saver(new MemorySaver())
+                .build();
+
+
+        Long userId = dto.getUserId();
+
+
+        String agentThreadId = "user-session-" + userId;
+        RunnableConfig config = RunnableConfig.builder()
+                .threadId(agentThreadId)
+                .build();
+        Flux<NodeOutput> outputFlux = agent.stream(message, config);
+
+        agent.stream(message, config)
+                    // 3. 将数据包装成 SSE 格式 (Spring 工具类)
+                    .map(data -> SseEmitter.event().data(data).build())
+                    // 4. 处理错误，将其转换为 SSE 事件发送给前端，而不是中断连接
+                    .onErrorResume(error -> {
+                        return Flux.just(SseEmitter.event()
+                                .data("Error: " + error.getMessage())
+                                .build());
+        });
+
+        return null;
+    }
+
+
+    private void handleHITL(UserChattingDTO dto, Long userId, String agentThreadId, InterruptionMetadata interruptionMetadata) throws IOException, InterruptedException {
         // 如果发生了中断，并且中断的类型是人工介入，那么我们可以获取中断的元信息，进行相应的处理（比如通知人工审核人员进行审核）
-        if (output instanceof InterruptionMetadata interruptionMetadata) {
+
 
             Long reviewerId = dto.getReviewerId();
 
@@ -169,7 +262,7 @@ public class ChatController {
             sseService.sendMessage(userId, userId,SSEEventEnum.WAITING_REVIEW.eventName,
                     "您的请求正在等待人工审核，线程ID: " + agentThreadId + "，请耐心等待。");
 
-        }
+
     }
 
 
