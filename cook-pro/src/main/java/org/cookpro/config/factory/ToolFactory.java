@@ -1,4 +1,4 @@
-package org.cookpro.utils;
+package org.cookpro.config.factory;
 
 import jakarta.annotation.Resource;
 import org.cookpro.config.properties.ToolEnvProperties;

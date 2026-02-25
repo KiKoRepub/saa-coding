@@ -18,6 +18,18 @@ public class ChatRecordService extends ServiceImpl<ChatRecordMapper, ChatRecord>
         return chatRecordMapper.batchInsert(chatRecords);
     }
 
+    public List<ChatRecord> listByConversationId(String conversationId) {
+        return lambdaQuery()
+                .eq(ChatRecord::getConversationId, conversationId)
+                .orderByAsc(ChatRecord::getCreatedAt)
+                .list();
+    }
 
+    public List<ChatRecord> listByUserId(Long userId){
+        return lambdaQuery()
+                .eq(ChatRecord::getUserId, userId)
+                .orderByAsc(ChatRecord::getCreatedAt)
+                .list();
+    }
 
 }

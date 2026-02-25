@@ -13,18 +13,18 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import org.cookpro.AgentBackground;
 import org.cookpro.R;
+import org.cookpro.config.factory.AgentModelFactory;
 import org.cookpro.dto.UserChattingDTO;
+import org.cookpro.entity.ChatRecord;
 import org.cookpro.entity.HITLEntity;
 import org.cookpro.entity.ToolEntity;
 import org.cookpro.enums.SSEEventEnum;
 import org.cookpro.exception.ChatException;
-import org.cookpro.service.HITLService;
-import org.cookpro.service.RAGService;
-import org.cookpro.service.SSEService;
-import org.cookpro.service.ToolService;
+import org.cookpro.service.*;
 import org.cookpro.utils.HITLHelper;
-import org.cookpro.utils.ToolFactory;
+import org.cookpro.config.factory.ToolFactory;
 import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -41,47 +41,58 @@ import java.util.Optional;
 public class ChatController {
 
 
-    @Resource
-    DashScopeChatModel chatModel;
+
 
     @Resource
     ToolService toolService;
-
     @Resource
     HITLService hitlService;
-
     @Resource
     ToolFactory toolFactory;
-
     @Resource
     SSEService sseService;
 
     @Resource
     RAGService ragService;
 
+    @Resource
+    ChatRecordService chatRecordService;
 
-
+    @Resource
+    UserPreferenceService userPreferenceService;
+    private final DashScopeChatModel chatModel;// 构造函数中初始化
+    private static final AgentBackground BACKGROUND = AgentBackground.COOKING_ASSISTANT;
     @GetMapping("/chat")
     @Operation(summary = "与烹饪助手聊天", description = "向烹饪助手发送消息，获取回复")
-    public R<String> chat(@RequestParam("message") String message){
-
-        AgentBackground cookingAssistant = AgentBackground.COOKING_ASSISTANT;
+    public R<String> chat(@RequestParam("message") String message,
+                          @RequestParam(value = "userId", required = false, defaultValue = "0") Long userId){
 
         ReactAgent agent = ReactAgent.builder()
-                .name(cookingAssistant.name())
+                .name(BACKGROUND.name())
                 .model(chatModel)
                 .outputType(String.class)
-                .systemPrompt(cookingAssistant.systemPrompt)
+                .systemPrompt(BACKGROUND.systemPrompt)
                 .build();
 
         try {
             AssistantMessage call = agent.call(message);
 
+            // 保存聊天记录
+            ChatRecord record = new ChatRecord();
+
+            record.setUserId(userId);
+
+            record.setUserMessage(message);
+            record.setBotResponse(call.getText());
+
+            chatRecordService.save(record);
             return R.ok(call.getText());
         }catch (GraphRunnerException e){
             throw  new ChatException("聊天失败: " + e.getMessage(), e);
         }
     }
+
+
 
     @PostMapping("/chatMore")
     @Operation(summary = "与烹饪助手进行功能更多的聊天", description = "向烹饪助手发送消息列表，获取回复")
@@ -89,8 +100,6 @@ public class ChatController {
 
         String message = dto.getMessage();
 
-
-        AgentBackground cookingAssistant = AgentBackground.COOKING_ASSISTANT;
 
         List<ToolEntity> toolEntities = toolService.getToolEntities(dto.getToolIdList());
         // 根据用户的选项，构建对应的 Hook 列表，并将其添加到 Agent 中
@@ -104,11 +113,11 @@ public class ChatController {
         }
 
         ReactAgent agent = ReactAgent.builder()
-                .name(cookingAssistant.name())
+                .name(BACKGROUND.name())
                 .model(chatModel)
                 .outputType(String.class)
                 .hooks(hookList)
-                .systemPrompt(cookingAssistant.systemPrompt)
+                .systemPrompt(BACKGROUND.systemPrompt)
                 .tools(toolFactory.selectTools(toolEntities))
                 .saver(new MemorySaver())
                 .build();
@@ -166,6 +175,14 @@ public class ChatController {
                 handleHITL(dto, userId, agentThreadId, interruptionMetadata);
             }
             AssistantMessage response = HITLHelper.getAssistantResponse(result.get().state());
+            // 保存聊天历史
+            ChatHistory history = new ChatHistory();
+            history.setUserId(userId);
+            history.setSessionId(agentThreadId);
+            history.setUserMessage(message);
+            history.setAssistantResponse(response.getText());
+            chatHistoryService.saveChatHistory(history);
+
             return R.ok(response.getText());
         }
         else {
@@ -265,5 +282,12 @@ public class ChatController {
 
     }
 
-
+    public ChatController(AgentModelFactory factory) {
+        Optional<ChatModel> agentModel = factory.getAgentModel(BACKGROUND);
+        if (agentModel.isPresent()) {
+            this.chatModel = (DashScopeChatModel) agentModel.get();
+        } else {
+            throw new IllegalStateException("未找到烹饪助手的聊天模型");
+        }
+    }
 }
