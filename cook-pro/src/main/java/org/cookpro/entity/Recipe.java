@@ -5,10 +5,8 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.experimental.SuperBuilder;
-import org.cookpro.handler.LinkedListStringTypeHandler;
+import org.cookpro.handler.ListStringTypeHandler;
 
-import java.util.LinkedList;
 import java.util.List;
 
 @Data
@@ -31,9 +29,9 @@ public class Recipe extends BaseEntity{
     @Schema(description = "调料")
     private String toppings;
 
-    @TableField(value = "steps",typeHandler = LinkedListStringTypeHandler.class)
+    @TableField(value = "steps",typeHandler = ListStringTypeHandler.class)
     @Schema(description = "步骤")
-    private LinkedList<String> steps; // 使用LinkedList以保持步骤的顺序
+    private List<String> steps; // 使用LinkedList以保持步骤的顺序
 
     @TableField("image_url")
     @Schema(description = "图片链接")

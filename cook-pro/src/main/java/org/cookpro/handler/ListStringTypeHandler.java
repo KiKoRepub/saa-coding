@@ -12,15 +12,16 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.LinkedList;
+import java.util.List;
 
 @MappedJdbcTypes(JdbcType.VARCHAR)
 @MappedTypes(LinkedList.class)
-public class LinkedListStringTypeHandler extends BaseTypeHandler<LinkedList<String>> {
+public class ListStringTypeHandler extends BaseTypeHandler<List<String>> {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public void setNonNullParameter(PreparedStatement ps, int i, LinkedList<String> parameter, JdbcType jdbcType) throws SQLException {
+    public void setNonNullParameter(PreparedStatement ps, int i, List<String> parameter, JdbcType jdbcType) throws SQLException {
         try {
             String json = objectMapper.writeValueAsString(parameter);
             ps.setString(i, json);

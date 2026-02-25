@@ -14,15 +14,18 @@ import jakarta.annotation.Resource;
 import org.cookpro.AgentBackground;
 import org.cookpro.R;
 import org.cookpro.config.factory.AgentModelFactory;
+import org.cookpro.dto.ChatRecordAddDTO;
 import org.cookpro.dto.UserChattingDTO;
 import org.cookpro.entity.ChatRecord;
 import org.cookpro.entity.HITLEntity;
 import org.cookpro.entity.ToolEntity;
+import org.cookpro.enums.ChatRecordStatusEnum;
 import org.cookpro.enums.SSEEventEnum;
 import org.cookpro.exception.ChatException;
 import org.cookpro.service.*;
 import org.cookpro.utils.HITLHelper;
 import org.cookpro.config.factory.ToolFactory;
+import org.cookpro.utils.ToolUtils;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.http.codec.ServerSentEvent;
@@ -171,17 +174,27 @@ public class ChatController {
         if (result.isPresent()) {
             NodeOutput output = result.get();
 
+
+            ChatRecordAddDTO recordAddDTO = new ChatRecordAddDTO();
             if (output instanceof InterruptionMetadata interruptionMetadata) {
                 handleHITL(dto, userId, agentThreadId, interruptionMetadata);
+                //发生中断  设置状态为 待审核
+                recordAddDTO.setRecordStatus(ChatRecordStatusEnum.REVIEWING.description);
+            }else {
+                // 没有发生中断，设置状态为 无需审核
+                recordAddDTO.setRecordStatus(ChatRecordStatusEnum.NON_REVIEW.description);
             }
             AssistantMessage response = HITLHelper.getAssistantResponse(result.get().state());
             // 保存聊天历史
-            ChatHistory history = new ChatHistory();
-            history.setUserId(userId);
-            history.setSessionId(agentThreadId);
-            history.setUserMessage(message);
-            history.setAssistantResponse(response.getText());
-            chatHistoryService.saveChatHistory(history);
+
+
+            recordAddDTO.setUserMessage(message);
+            recordAddDTO.setBotResponse(response.getText());
+            recordAddDTO.setUserId(userId);
+            recordAddDTO.setToolCalls(ToolUtils.convertToolCall(response.getToolCalls()));
+            recordAddDTO.setThreadId(agentThreadId);
+
+            chatRecordService.saveOneRecord(recordAddDTO);
 
             return R.ok(response.getText());
         }

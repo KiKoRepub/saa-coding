@@ -51,6 +51,8 @@ public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
 
     @Resource
     SSEService sseService;
+    @Resource
+    ChatRecordService chatRecordService;
 
     public Page<HITLPageVo> getPublishPageList(HITLPageDTO dto) {
         Integer pageNum = dto.getPageNum();
@@ -220,7 +222,9 @@ public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
 
                     AssistantMessage response = HITLHelper.getAssistantResponse(finalResult.get().state());
 
-                    System.out.println(response.getText());
+                    SystemPrinter.println(response.getText());
+
+                    chatRecordService.updateRecord(message, response.getText(),toId);
 
                     sseService.sendMessage(userId,toId,
                             SSEEventEnum.COMPLETED.eventName,
