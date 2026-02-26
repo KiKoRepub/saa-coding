@@ -11,4 +11,6 @@ import java.util.List;
 public interface ChatRecordMapper extends BaseMapper<ChatRecord> {
 
     Integer batchInsert(@Param("list") List<ChatRecord> chatRecords);
+
+    List<ChatRecord> selectByConversationWithOrder(@Param("conversationId") String conversationId);
 }

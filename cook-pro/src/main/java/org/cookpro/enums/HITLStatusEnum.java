@@ -3,10 +3,10 @@ package org.cookpro.enums;
 
 public enum HITLStatusEnum {
     WAITING("等待审核"),
-    PROCESSING("审核中"),
     APPROVED("审核通过"),
     EDITED("已修改"),
     REJECTED("已拒绝"),
+    NON_AUDIT("无需审核")
     ;
 
     public final String description;

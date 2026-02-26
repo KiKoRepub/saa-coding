@@ -27,14 +27,10 @@ import org.cookpro.vo.CommonEnumVo;
 import org.cookpro.vo.HITLPageVo;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.tool.ToolCallback;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
@@ -77,27 +73,31 @@ public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
 
         HITLEntity hitlEntity = getById(id);
 
+        if (! Objects.equals(hitlEntity.getStatus(), HITLStatusEnum.WAITING.description)){
+            throw new IllegalStateException("该人工介入请求不处于待审核状态");
+        }
 
         String threadId = hitlEntity.getThreadId();
         InterruptionMetadata interruptionMetadata = hitlEntity.getInterruptData();
         Long reviewerId = hitlEntity.getReviewerId();
         Long publisherId = hitlEntity.getPublisherId();
 
-        String message = dto.getMessage();
         boolean approved = dto.isApproved();
 
         // 获取 审核结果
         InterruptionMetadata approvalMetadata = getReviewResult(interruptionMetadata,approved);
         if (approved){
             sseService.sendMessage(reviewerId,publisherId,
-                    SSEEventEnum.REVIEW_PASSED.eventName,
+                    SSEEventEnum.AUDIT_PASSED.eventName,
                     "您的人工介入请求已通过审核,正在恢复执行..."
             );
+            hitlEntity.setStatus(HITLStatusEnum.APPROVED.description);
         }else {
             sseService.sendMessage(reviewerId,publisherId,
-                    SSEEventEnum.REVIEW_REJECTED.eventName,
+                    SSEEventEnum.AUDIT_REJECTED.eventName,
                     "您的人工介入请求未通过审核,原因是:"+ dto.getReviewComment()
             );
+            hitlEntity.setStatus(HITLStatusEnum.REJECTED.description);
         }
 
         // 创建恢复配置
@@ -106,9 +106,12 @@ public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
                 .addMetadata(RunnableConfig.HUMAN_FEEDBACK_METADATA_KEY, approvalMetadata)
                 .build();
         // 创建异步任务 恢复 执行
-        createAsyncTask(message, resumeConfig,
+        // 传入空消息，表示不需要发送新的输入，直接恢复执行
+        createAsyncTask(null, resumeConfig,
                 hitlEntity.getReviewerId(), hitlEntity.getPublisherId());
 
+        // 保存审核结果
+        updateById(hitlEntity);
 
         return hitlEntity.getId().toString();
     }
@@ -118,6 +121,9 @@ public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
         Long id = dto.getId();
         HITLEntity hitlEntity = getById(id);
 
+        if (! Objects.equals(hitlEntity.getStatus(), HITLStatusEnum.WAITING.description)){
+            throw new IllegalStateException("该人工介入请求不处于待审核状态");
+        }
         String threadId = hitlEntity.getThreadId();
         InterruptionMetadata interruptionMetadata = hitlEntity.getInterruptData();
 
@@ -126,6 +132,7 @@ public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
         List<HITLToolArgInfo> infoList = dto.getArgInfoList();
         String toolName = dto.getToolName();
 
+        // 构建新的 InterruptionMetadata，修改特定工具的参数
         InterruptionMetadata.Builder builder = InterruptionMetadata.builder()
                 .nodeId(interruptionMetadata.node())
                 .state(interruptionMetadata.state());
@@ -157,13 +164,15 @@ public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
                 .threadId(threadId)
                 .addMetadata(RunnableConfig.HUMAN_FEEDBACK_METADATA_KEY, editMetaData)
                 .build();
+        // 创建异步任务 恢复 执行
         createAsyncTask(message,
                 resumeConfig,
                 hitlEntity.getReviewerId(),
                 hitlEntity.getPublisherId()
         );
-
-
+        // 保存修改结果
+        hitlEntity.setStatus(HITLStatusEnum.EDITED.description);
+        updateById(hitlEntity);
 
         return hitlEntity.getId().toString();
     }
@@ -224,7 +233,7 @@ public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
 
                     SystemPrinter.println(response.getText());
 
-                    chatRecordService.updateRecord(message, response.getText(),toId);
+                    chatRecordService.saveOneRecord(null);
 
                     sseService.sendMessage(userId,toId,
                             SSEEventEnum.COMPLETED.eventName,
@@ -233,7 +242,13 @@ public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
                 }
             } catch (GraphRunnerException e) {
                 log.error("异步恢复执行失败", e);
-                throw new RuntimeException(e);
+                try {
+                    sseService.sendMessage(userId, toId,
+                            SSEEventEnum.ERROR.eventName,
+                            "执行恢复失败，原因是: " + e.getMessage());
+                }catch (IOException | InterruptedException ex){
+                    log.error("sse 推送失败", ex);
+                }
             } catch (IOException | InterruptedException e) {
                 log.error("sse 推送失败", e);
                 throw new RuntimeException(e);

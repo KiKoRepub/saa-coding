@@ -1,5 +1,6 @@
 package org.cookpro.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -14,34 +15,70 @@ import java.util.List;
 @TableName("chat_record")
 public class ChatRecord extends BaseEntity {
 
-    @TableId
-    @Schema(description = "ID")
-    private Integer id;
+        @TableId(type = IdType.ASSIGN_ID)
+        @Schema(description = "聊天记录ID")
+        private Long id;
 
-    @TableField("user_id")
-    @Schema(description = "User ID")
-    private Long userId;
+        @TableField("user_id")
+        @Schema(description = "用户ID")
+        private Long userId;
 
-    @TableField("conversation_id")
-    @Schema(description = "会话id")
-    private String conversationId;
+        @TableField("conversation_id")
+        @Schema(description = "会话ID，相同会话ID的消息属于同一次对话")
+        private String conversationId;
 
-    @TableField("user_message")
-    @Schema(description = "User Message")
-    private String userMessage;
+        @TableField("thread_id")
+        @Schema(description = "线程ID，相同线程ID的消息属于同一个线程")
+        private String threadId;
 
-    @TableField("bot_response")
-    @Schema(description = "Bot Response")
-    private String botResponse;
-    @TableField("thread_id")
-    @Schema(description = "Thread ID, 用于关联同一对话中的多个消息")
-    private String threadId;
+        /**
+         * USER / ASSISTANT / TOOL / AUDIT
+         */
+        @TableField("record_type")
+        @Schema(description = "消息类型，USER / ASSISTANT / TOOL / AUDIT")
+        private String recordType;
 
-    @TableField(value = "tool_calls",typeHandler = ListStringTypeHandler.class)
-    @Schema(description = "工具调用记录")
-    private List<String> toolCalls;
-    @TableField("record_status")
-    @Schema(description = "记录状态,绑定 ChatRecordStatusEnum")
-    private String recordStatus;
+        @TableField("parent_id")
+        private Long parentId;
+
+        /**
+         * 用户消息
+         */
+        @TableField("user_message")
+        private String userMessage;
+
+        /**
+         * assistant 回复
+         */
+        @TableField("bot_response")
+        private String botResponse;
+
+        /**
+         * tool call json
+         */
+        @TableField(value = "tool_call")
+        private String toolCall;
+
+        /**
+         * tool result string
+         */
+        @TableField("tool_result")
+        private String toolResult;
+
+
+        @TableField("hitl_status")
+        private String hitlStatus;
 
 }
+/*
+
+
+
+
+
+CREATE INDEX idx_thread_id ON chat_record(thread_id);
+
+CREATE INDEX idx_conversation_id ON chat_record(conversation_id);
+
+CREATE INDEX idx_user_id ON chat_record(user_id);
+ */

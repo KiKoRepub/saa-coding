@@ -19,7 +19,7 @@ import org.cookpro.dto.UserChattingDTO;
 import org.cookpro.entity.ChatRecord;
 import org.cookpro.entity.HITLEntity;
 import org.cookpro.entity.ToolEntity;
-import org.cookpro.enums.ChatRecordStatusEnum;
+import org.cookpro.enums.HITLStatusEnum;
 import org.cookpro.enums.SSEEventEnum;
 import org.cookpro.exception.ChatException;
 import org.cookpro.service.*;
@@ -134,39 +134,6 @@ public class ChatController {
                 .threadId(agentThreadId)
                 .build();
 
-/*
-        SseEmitter emitter = new SseEmitter();
-
-        try {
-            Flux<NodeOutput> flux = agent.stream(message, config);
-            flux.subscribe(
-                    data -> {
-                        try {
-                            emitter.send(data);
-                        } catch (IOException e) {
-                            emitter.completeWithError(e);
-                        }
-                    },
-                    error -> {
-                        try {
-                            emitter.send("聊天过程中发生错误: " + error.getMessage());
-                        } catch (IOException e) {
-                            emitter.completeWithError(e);
-                        }
-                    },
-                    () -> {
-                        try {
-                            emitter.send("聊天结束");
-                            emitter.complete();
-                        } catch (IOException e) {
-                            emitter.completeWithError(e);
-                        }
-                    });
-
-
-        }catch (Exception e){
-                throw new ChatException("聊天失败: " + e.getMessage(), e);
-        }*/
 
 
         Optional<NodeOutput> result = agent.invokeAndGetOutput(message,config);
@@ -179,10 +146,10 @@ public class ChatController {
             if (output instanceof InterruptionMetadata interruptionMetadata) {
                 handleHITL(dto, userId, agentThreadId, interruptionMetadata);
                 //发生中断  设置状态为 待审核
-                recordAddDTO.setRecordStatus(ChatRecordStatusEnum.REVIEWING.description);
+                recordAddDTO.setHitlStatus(HITLStatusEnum.WAITING.description);
             }else {
                 // 没有发生中断，设置状态为 无需审核
-                recordAddDTO.setRecordStatus(ChatRecordStatusEnum.NON_REVIEW.description);
+                recordAddDTO.setHitlStatus(HITLStatusEnum.NON_AUDIT.description);
             }
             AssistantMessage response = HITLHelper.getAssistantResponse(result.get().state());
             // 保存聊天历史
@@ -286,10 +253,10 @@ public class ChatController {
             hitlService.save(hitlEntity);
 
             //TODO 通知审核人 进行审核
-            sseService.sendMessage(userId,reviewerId, SSEEventEnum.WAITING_REVIEW.eventName,
+            sseService.sendMessage(userId,reviewerId, SSEEventEnum.WAITING_AUDIT.eventName,
                     "您收到了一个新的人工审核请求，线程ID: " + agentThreadId + "，请尽快处理。");
             //TODO 通知 发布者 目前的执行状态
-            sseService.sendMessage(userId, userId,SSEEventEnum.WAITING_REVIEW.eventName,
+            sseService.sendMessage(userId, userId,SSEEventEnum.WAITING_AUDIT.eventName,
                     "您的请求正在等待人工审核，线程ID: " + agentThreadId + "，请耐心等待。");
 
 

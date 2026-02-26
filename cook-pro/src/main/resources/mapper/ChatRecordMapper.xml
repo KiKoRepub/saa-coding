@@ -9,4 +9,14 @@
             (#{record.conversationId}, #{record.userMessage}, #{record.botResponse}, #{record.createdAt})
         </foreach>
     </insert>
+
+    <select id="selectByConversationWithOrder" resultType="org.cookpro.entity.ChatRecord">
+        SELECT * FROM chat_record
+        WHERE conversation_id = #{conversationId}
+        ORDER BY
+            thread_id ASC,
+            create_time ASC,
+            id ASC
+    </select>
+
 </mapper>

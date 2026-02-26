@@ -79,9 +79,6 @@ public class TestController {
     @GetMapping("humanInLoop")
     public void testHumanInLoop() throws GraphRunnerException {
 
-
-
-
 // 人工介入利用检查点机制。
 // 你必须提供线程ID以将执行与会话线程关联，
 // 以便可以暂停和恢复对话（人工审查所需）。
@@ -141,7 +138,9 @@ public class TestController {
             OverAllState overAllState = result.get().state();
             SystemPrinter.println("没有触发人工介入中断，结果: " + HITLHelper.getAssistantResponse(overAllState).getText());
         }
+        SystemPrinter.println("请求执行完成");
     }
+
 
     private static InterruptionMetadata getReviewResult(InterruptionMetadata interruptionMetadata) {
         // 6. 模拟人工决策（这里选择批准）
