@@ -16,12 +16,14 @@ import org.springframework.ai.tool.ToolCallback;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 @Configuration
 public class AgentModelConfig {
 
 
     @Bean
+    @Primary
     public DashScopeChatModel dashScopeChatModel(DashScopeConnectionProperties connectionProperties){
         DashScopeApi dashScopeApi = DashScopeApi.builder()
                 .apiKey(connectionProperties.getApiKey())
@@ -45,14 +47,14 @@ public class AgentModelConfig {
 
 
 // 创建人工介入Hook
-        HumanInTheLoopHook humanInTheLoopHook = HumanInTheLoopHook.builder() // [!code highlight]
-                .approvalOn("google_web_search", ToolConfig.builder() // [!code highlight]
-                        .description("谷歌联网操作需要审批") // [!code highlight]
-                        .build()) // [!code highlight]
-                .approvalOn("bocha_web_search", ToolConfig.builder() // [!code highlight]
-                        .description("博查联网操作需要审批") // [!code highlight]
-                        .build()) // [!code highlight]
-                .build(); // [!code highlight]
+        HumanInTheLoopHook humanInTheLoopHook = HumanInTheLoopHook.builder()
+                .approvalOn("google_web_search", ToolConfig.builder()
+                        .description("谷歌联网操作需要审批")
+                        .build())
+                .approvalOn("boCha_web_search", ToolConfig.builder()
+                        .description("博查联网操作需要审批")
+                        .build())
+                .build();
 
 
         ToolCallback[] webSearchToolCallbacks = ToolCallbacks.from(

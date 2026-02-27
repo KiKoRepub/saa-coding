@@ -1,0 +1,31 @@
+{
+  "result_1": {
+    "OverAllState": {
+      "data": {
+        "input": "考虑调用工具，帮我看看可乐鸡翅的配方",
+        "messages": [
+          {
+            "messageType": "USER",
+            "metadata": {
+              "messageType": "USER"
+            },
+            "media": [],
+            "text": "考虑调用工具，帮我看看可乐鸡翅的配方"
+          },
+          {
+            "messageType": "USER",
+            "metadata": {
+              "messageType": "USER"
+            },
+            "media": [],
+            "text": "考虑调用工具，帮我看看可乐鸡翅的配方"
+          }
+        ]
+      }
+    }
+  },
+  "result_2": {
+    StreamingOutput{node=_AGENT_MODEL_, agent=human_in_loop_agent, message=AssistantMessage [messageType=ASSISTANT, toolCalls=[ToolCall[id=call_8dc45b7cfe7c4f42b5c750, type=function, name=google_web_search, arguments={"arg0": "可乐鸡翅 配方", "arg1": 5}]], textContent=, metadata={finishReason=TOOL_CALLS, search_info=, role=ASSISTANT, id=86389ac1-a26c-4862-9366-4827f743a07d, messageType=ASSISTANT, reasoningContent=}], chunk=null, tokenUsage=DefaultUsage{promptTokens=356, completionTokens=34, totalTokens=390}, state={"OverAllState":{"data":{"input":"考虑调用工具，帮我看看可乐鸡翅的配方","messages":[{"messageType":"USER","metadata":{"messageType":"USER"},"media":[],"text":"考虑调用工具，帮我看看可乐鸡翅的配方"}]}}}, subGraph=true}
+  },
+
+}

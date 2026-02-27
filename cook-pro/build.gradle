@@ -15,6 +15,7 @@ dependencies {
     // 基础依赖
     implementation "org.springframework.boot:spring-boot-starter:${springBootVersion}"
     implementation "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
+//    implementation "org.springframework.boot:spring-boot-starter-webflux:${springBootVersion}"
 
     // SAA 阿里云相关依赖
     implementation "com.alibaba.cloud.ai:spring-ai-alibaba-agent-framework:${alibabaVersion}"
@@ -26,6 +27,8 @@ dependencies {
     implementation "com.alibaba:druid-spring-boot-starter:${druidVersion}"
     implementation "com.baomidou:mybatis-plus-spring-boot3-starter:${mybatisPlusVersion}"
 
+    // Redis
+    implementation "org.springframework.boot:spring-boot-starter-data-redis:${springBootVersion}"
     // Spring AI 相关依赖
 //    implementation "org.springframework.ai:spring-ai-rag:${springAiVersion}"
     implementation "org.springframework.ai:spring-ai-advisors-vector-store:${springAiVersion}"

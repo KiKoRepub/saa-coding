@@ -8,6 +8,7 @@ import com.alibaba.cloud.ai.graph.agent.hook.hip.ToolConfig;
 import org.cookpro.entity.HITLToolArgInfo;
 import org.cookpro.entity.ToolEntity;
 import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.messages.ToolResponseMessage;
 
 import java.util.List;
 import java.util.Optional;
@@ -109,8 +110,23 @@ public class HITLHelper {
                         .filter(msg -> msg instanceof AssistantMessage)
                         .map(msg -> (AssistantMessage) msg))
                 .reduce((first, second) -> second)
-                .orElseThrow(() -> new AgentException("No AssistantMessage found in 'messages' state"));
+                .orElse(new AssistantMessage(""));
 
+    }
+    public static ToolResponseMessage getToolResponse(OverAllState state){
+        Optional<OverAllState> optionalState = Optional.of(state);
+        return optionalState.flatMap(s -> s.value("messages"))
+                .stream()
+                .flatMap(messageList -> ((List<?>) messageList).stream()
+                        .filter(msg -> msg instanceof ToolResponseMessage)
+                        .map(msg -> (ToolResponseMessage) msg))
+                .reduce((first, second) -> second)
+                .orElseThrow(() -> new AgentException("No ToolResponseMessage found in 'messages' state"));
+
+    }
+
+    public static boolean isToolCall(AssistantMessage message){
+       return ! message.getToolCalls().isEmpty();
     }
 
 

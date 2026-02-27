@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/chat")
@@ -203,7 +204,7 @@ public class ChatController {
         Long userId = dto.getUserId();
 
 
-        String agentThreadId = "user-session-" + userId;
+        String agentThreadId = "user-agent-" + userId + UUID.randomUUID();
         RunnableConfig config = RunnableConfig.builder()
                 .threadId(agentThreadId)
                 .build();

@@ -33,10 +33,6 @@ public class CookRecord extends BaseEntity {
     @Schema(description = "备注")
     private String remark;
 
-    @TableField("create_time")
-    @Schema(description = "创建时间")
-    private String createTime;
-
 }
 
 /*

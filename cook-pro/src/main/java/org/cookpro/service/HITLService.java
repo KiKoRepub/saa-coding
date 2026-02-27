@@ -27,6 +27,7 @@ import org.cookpro.vo.CommonEnumVo;
 import org.cookpro.vo.HITLPageVo;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -43,7 +44,7 @@ public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
     ReactAgent dashscopeHITLAgent;
 
     @Resource
-    ThreadPoolExecutor asyncExecutor;
+    ThreadPoolTaskExecutor asyncExecutor;
 
     @Resource
     SSEService sseService;

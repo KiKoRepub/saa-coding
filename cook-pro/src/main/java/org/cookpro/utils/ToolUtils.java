@@ -1,6 +1,7 @@
 package org.cookpro.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.cookpro.vo.ToolCallVo;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.w3c.dom.stylesheets.LinkStyle;
 
@@ -43,5 +44,27 @@ public class ToolUtils {
         }
 
     }
+    public static ToolCallVo serializeToolCall(String toolCallJson){
+        try {
+            AssistantMessage.ToolCall call = objectMapper.readValue(toolCallJson, AssistantMessage.ToolCall.class);
 
+            return serializeToolCall(call);
+
+        }catch (Exception e){
+            throw new RuntimeException("工具调用反序列化失败", e);
+        }
+
+     }
+     public static ToolCallVo serializeToolCall(AssistantMessage.ToolCall toolCall){
+        try {
+            ToolCallVo toolCallVo = new ToolCallVo();
+            toolCallVo.setToolName(toolCall.name());
+            toolCallVo.setArguments(objectMapper.convertValue(toolCall.arguments(), Map.class));
+            return toolCallVo;
+
+        }catch (Exception e){
+            throw new RuntimeException("工具调用反序列化失败", e);
+        }
+
+     }
 }
