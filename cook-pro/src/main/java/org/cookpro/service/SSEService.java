@@ -21,27 +21,32 @@ public class SSEService  extends ServiceImpl<SSEUserRecordMapper,SSEUserRecord> 
 
 
     private static ObjectMapper objectMapper = new ObjectMapper();
-    public String sendMessage(Long userId, Long toId, String eventName, Object data) throws IOException, InterruptedException {
-        SseEmitter userEmitter = getUserEmitter(toId);
+    public String sendMessage(Long userId, Long toId, String eventName, Object data)  {
+        try {
+            SseEmitter userEmitter = getUserEmitter(toId);
 
-        SSEUserRecordStatusEnum result;
+            SSEUserRecordStatusEnum result;
 
-        if (userEmitter == null) {
-            // 用户未连接SSE，存入阻塞队列
-            SSEQueueMessage message = new SSEQueueMessage(userId, toId, eventName, data);
-            MessageQueueManager.addMessageToQueue(message);
-            result = SSEUserRecordStatusEnum.WAITING; // 未实时发送，等待用户连接后发送
-        } else {
-            // 实时发送消息
-            userEmitter.send(SseEmitter.event()
-                    .name(eventName)
-                    .data(data));
-            result = SSEUserRecordStatusEnum.SUBMITTED;
+            if (userEmitter == null) {
+                // 用户未连接SSE，存入阻塞队列
+                SSEQueueMessage message = new SSEQueueMessage(userId, toId, eventName, data);
+                MessageQueueManager.addMessageToQueue(message);
+                result = SSEUserRecordStatusEnum.WAITING; // 未实时发送，等待用户连接后发送
+            } else {
+                // 实时发送消息
+                userEmitter.send(SseEmitter.event()
+                        .name(eventName)
+                        .data(data));
+                result = SSEUserRecordStatusEnum.SUBMITTED;
+            }
+            // 保存消息记录（原有逻辑）
+            saveUserMessageRecord(userId, toId, eventName, data, result.description);
+
+            return result.description;
+        }catch (IOException | InterruptedException e){
+            log.error("发送SSE消息失败: " + e.getMessage());
+            return SSEUserRecordStatusEnum.ERROR.description;
         }
-        // 保存消息记录（原有逻辑）
-        saveUserMessageRecord(userId, toId, eventName, data,result.description);
-
-        return result.description;
     }
 
     private void saveUserMessageRecord(Long userId, Long toId, String eventName, Object data,String status){

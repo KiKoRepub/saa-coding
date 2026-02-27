@@ -8,6 +8,7 @@ public enum SSEUserRecordStatusEnum {
     DESTROYED("已销毁"),
     EXPIRED("已过期"),
     FORBIDDEN("已封禁"),
+    ERROR("错误")
     ;
 
     public final String description;

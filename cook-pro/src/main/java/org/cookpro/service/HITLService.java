@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.cookpro.dto.HITLEditInfoDTO;
 import org.cookpro.dto.HITLPageDTO;
 import org.cookpro.dto.HITLReviewDTO;
+import org.cookpro.dto.ToolChatDTO;
 import org.cookpro.entity.HITLToolArgInfo;
 import org.cookpro.entity.HITLEntity;
 import org.cookpro.enums.HITLStatusEnum;
@@ -25,21 +26,20 @@ import org.cookpro.utils.HITLHelper;
 import org.cookpro.utils.SystemPrinter;
 import org.cookpro.vo.CommonEnumVo;
 import org.cookpro.vo.HITLPageVo;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
-
+    //TODO 改为用户组装的 agent，包含用户选择的工具等信息
     @Resource
     ReactAgent dashscopeHITLAgent;
 
@@ -50,6 +50,10 @@ public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
     SSEService sseService;
     @Resource
     ChatRecordService chatRecordService;
+    @Resource
+    MemoryCacheService memoryCacheService;
+    @Resource
+    ToolService toolService;
 
     public Page<HITLPageVo> getPublishPageList(HITLPageDTO dto) {
         Integer pageNum = dto.getPageNum();
@@ -68,7 +72,7 @@ public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
         return getPageVoList(pageNum, pageSize, wrapper);
     }
 
-    public String reviewHitl(HITLReviewDTO dto) throws GraphRunnerException, IOException, InterruptedException {
+    public String reviewHitl(HITLReviewDTO dto) throws GraphRunnerException {
         Long id = dto.getId();
 
 
@@ -177,7 +181,46 @@ public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
 
         return hitlEntity.getId().toString();
     }
-    @NotNull
+
+
+    public void initHITL(List<ToolChatDTO> toolChatDTOList, Long publisherId, String agentThreadId, InterruptionMetadata interruptionMetadata) {
+        // 发生了中断
+        // 获取中断的元信息，进行相应的处理（比如通知人工审核人员进行审核）
+        HITLEntity hitlEntity = new HITLEntity();
+
+        hitlEntity.setPublisherId(publisherId);
+
+        hitlEntity.setInterruptData(interruptionMetadata);
+        hitlEntity.setThreadId(agentThreadId);
+        hitlEntity.setReason("等待人工审核工具调用");
+
+
+        StringBuilder remarkBuilder = new StringBuilder();
+
+        //只有一个 feedback
+        Long auditorId = null;
+        for (InterruptionMetadata.ToolFeedback feedback : interruptionMetadata.toolFeedbacks()) {
+            remarkBuilder.append("工具: ").append(feedback.getName())
+                    .append(", 参数: ").append(feedback.getArguments())
+                    .append(", 描述: ").append(feedback.getDescription())
+                    .append("\n");
+            // 根据工具名称匹配审核人
+            for (ToolChatDTO toolChatDTO : toolChatDTOList) {
+                if (toolChatDTO.getToolName().equals(feedback.getName())) {
+                    hitlEntity.setReviewerId(toolChatDTO.getAuditorId());
+                    break;
+                }
+            }
+
+        }
+        hitlEntity.setRemark(remarkBuilder.toString());
+        save(hitlEntity);
+
+        //TODO 通知审核人 进行审核
+        sseService.sendMessage(publisherId, auditorId, SSEEventEnum.WAITING_AUDIT.eventName,
+                "您收到了一个新的人工审核请求，线程ID: " + agentThreadId + "，请尽快处理。");
+
+    }
     private Page<HITLPageVo> getPageVoList(Integer pageNum, Integer pageSize, QueryWrapper<HITLEntity> wrapper) {
         Page<HITLEntity> page = this.page(new Page<>(pageNum, pageSize), wrapper);
         List<HITLPageVo> voList = page.getRecords().stream()
@@ -189,10 +232,6 @@ public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
         return result;
     }
 
-
-
-
-
     private  QueryWrapper<HITLEntity> getPublishPageQueryWrapper(HITLPageDTO dto) {
         Long userId = 11L;
         return getBasePageQueryWrapper(dto).eq("publisher_id", userId);
@@ -201,20 +240,16 @@ public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
         Long userId = 11L;
         return getBasePageQueryWrapper(dto).eq("review_id", userId);
     }
-
-
     private QueryWrapper<HITLEntity> getBasePageQueryWrapper(HITLPageDTO dto){
         QueryWrapper<HITLEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("deleted", 0)
                 .orderByDesc("create_time");
-
+        //TODO 根据 dto 中的其他字段添加更多的查询条件，例如状态、时间范围等
 
         return queryWrapper;
 
     }
 
-
-    @NotNull
     private HITLPageVo toPageVo(HITLEntity entity) {
         HITLPageVo hitlPageVo = new HITLPageVo();
 
@@ -223,40 +258,87 @@ public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
         return hitlPageVo;
     }
 
-    private void createAsyncTask(String message, RunnableConfig resumeConfig,Long userId,Long toId) throws GraphRunnerException {
+    private void createAsyncTask(String message, RunnableConfig resumeConfig,Long auditorId,Long publisherId) throws GraphRunnerException {
         CompletableFuture.runAsync(() -> {
             try {
-                Optional<NodeOutput> finalResult = dashscopeHITLAgent.invokeAndGetOutput(message, resumeConfig);
 
-                if (finalResult.isPresent()) {
+                Flux<NodeOutput> finalFluxResult = dashscopeHITLAgent.stream(message, resumeConfig);
 
-                    AssistantMessage response = HITLHelper.getAssistantResponse(finalResult.get().state());
+                String threadId = resumeConfig.threadId().get();
+                Sinks.Many<String> sink = memoryCacheService.getInterruptSink(threadId);
 
-                    SystemPrinter.println(response.getText());
+                finalFluxResult.subscribe(output -> {
+                    if (output instanceof InterruptionMetadata interruptionMetadata) {
+                        // 初始化 中断信息
+                        Long newAuditorId = null;
+                        StringBuilder remarkBuilder = new StringBuilder();
+                        for (InterruptionMetadata.ToolFeedback feedback : interruptionMetadata.toolFeedbacks()) {
+                            String toolName = feedback.getName();
 
-                    chatRecordService.saveOneRecord(null);
+                            remarkBuilder.append("工具: ").append(toolName)
+                                    .append(", 参数: ").append(feedback.getArguments())
+                                    .append(", 描述: ").append(feedback.getDescription())
+                                    .append("\n");
 
-                    sseService.sendMessage(userId,toId,
+                            // 根据工具名称匹配审核人
+                            ToolChatDTO chatDTO = toolService.getChatDTO(toolName);
+                            newAuditorId = chatDTO.getAuditorId();
+
+                        }
+                        // 保存审核信息
+                            HITLEntity hitlEntity = new HITLEntity();
+
+                            hitlEntity.setPublisherId(publisherId);
+
+                            hitlEntity.setInterruptData(interruptionMetadata);
+                            hitlEntity.setThreadId(threadId);
+                            hitlEntity.setReason("等待人工审核工具调用");
+
+                            hitlEntity.setRemark(remarkBuilder.toString());
+                            save(hitlEntity);
+
+                            sseService.sendMessage(publisherId, newAuditorId, SSEEventEnum.WAITING_AUDIT.eventName,
+                                    "您收到了一个新的人工审核请求，线程ID: " + threadId + "，请尽快处理。");
+                        }
+
+                        if (memoryCacheService.hasInterruptSink(threadId)) {
+                            sink.tryEmitNext("[系统] 发生了工具调用中断，请等待人工审核结果...");
+                        } else {
+                            sink.tryEmitNext("[系统] 系统出现异常，无法处理人工审核，请稍后再试...");
+                            sink.tryEmitComplete();
+                        }
+                    }
+                , error -> {
+                    log.error("恢复执行过程中发生错误", error);
+                    if (sink != null) {
+                        sink.tryEmitError(error);
+                        memoryCacheService.removeInterruptSink(threadId);
+                    }
+                    sseService.sendMessage(auditorId, publisherId,
+                            SSEEventEnum.ERROR.eventName,
+                            "执行恢复过程中发生错误，原因是: " + error.getMessage());
+                }, () -> {
+                    if (sink != null) {
+                        sink.tryEmitComplete();
+                        memoryCacheService.removeInterruptSink(threadId);
+                    }
+                    sseService.sendMessage(auditorId, publisherId,
                             SSEEventEnum.COMPLETED.eventName,
-                            "执行已完成,结果为: " + response.getText());
+                            "执行已完成。");
+                });
 
-                }
+
+
             } catch (GraphRunnerException e) {
                 log.error("异步恢复执行失败", e);
-                try {
-                    sseService.sendMessage(userId, toId,
-                            SSEEventEnum.ERROR.eventName,
-                            "执行恢复失败，原因是: " + e.getMessage());
-                }catch (IOException | InterruptedException ex){
-                    log.error("sse 推送失败", ex);
-                }
-            } catch (IOException | InterruptedException e) {
-                log.error("sse 推送失败", e);
-                throw new RuntimeException(e);
+
+                sseService.sendMessage(auditorId, publisherId,
+                    SSEEventEnum.ERROR.eventName,
+                    "执行恢复失败，原因是: " + e.getMessage());
             }
         }, asyncExecutor);
-
     }
+
 
     private InterruptionMetadata getReviewResult(InterruptionMetadata interruptionMetadata,boolean isApproved) {
 

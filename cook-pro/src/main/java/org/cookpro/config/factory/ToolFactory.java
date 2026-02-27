@@ -2,7 +2,7 @@ package org.cookpro.config.factory;
 
 import jakarta.annotation.Resource;
 import org.cookpro.config.properties.ToolEnvProperties;
-import org.cookpro.entity.ToolEntity;
+import org.cookpro.dto.ToolChatDTO;
 import org.cookpro.enums.ToolSourceEnum;
 import org.cookpro.tools.AgenticRAGSearchTool;
 import org.cookpro.tools.WebSearchTool;
@@ -37,10 +37,10 @@ public class ToolFactory {
     }
 
 
-    public  List<ToolCallback> selectTools(List<ToolEntity> toolEntities) {
+    public  List<ToolCallback> selectTools(List<ToolChatDTO> toolEntities) {
 
         List<ToolCallback> result = new LinkedList<>();
-        for (ToolEntity toolEntity : toolEntities) {
+        for (ToolChatDTO toolEntity : toolEntities) {
             if (ToolSourceEnum.IN_PROJECT.description.equals(toolEntity.getSource())){
                 // 内置工具
                 // 根据工具名获取工具实例

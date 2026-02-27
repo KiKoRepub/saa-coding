@@ -7,11 +7,13 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.cookpro.dto.ToolChatDTO;
 import org.cookpro.dto.ToolPageDTO;
 import org.cookpro.entity.ToolEntity;
 import org.cookpro.mapper.ToolMapper;
 import org.cookpro.config.factory.ToolFactory;
 import org.cookpro.vo.ToolPageListVo;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,6 +24,9 @@ public class ToolService extends ServiceImpl<ToolMapper, ToolEntity> {
 
     @Resource
     ToolFactory toolFactory;
+
+    @Resource
+    ToolMapper toolMapper;
 
     public Page<ToolPageListVo> getToolPageList(ToolPageDTO dto) {
         int pageNum = dto.getPageNum();
@@ -48,15 +53,13 @@ public class ToolService extends ServiceImpl<ToolMapper, ToolEntity> {
 
 
 
-    public List<ToolEntity> getToolEntities(List<Long> toolIdList) {
-        QueryWrapper<ToolEntity> queryWrapper = new QueryWrapper<ToolEntity>()
-                .eq("deleted",0)
-                .in("id", toolIdList);
-
-        return this.list(queryWrapper);
+    public ToolChatDTO getChatDTO(String toolName) {
+       return toolMapper.selectChatDTOByName(toolName);
     }
 
-
+    public List<ToolCallback> selectTools(List<ToolChatDTO> dtoList){
+        return toolFactory.selectTools(dtoList);
+    }
     private ToolPageListVo toPageVo(ToolEntity toolEntity) {
 
         ToolPageListVo vo = new ToolPageListVo();

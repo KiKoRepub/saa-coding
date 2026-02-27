@@ -25,10 +25,12 @@ public class ToolEntity extends BaseEntity{
     @Schema(description = "工具描述，介绍工具的功能和用途")
     private String description;
 
-    @TableField("approve_description")
+    @TableField("audit_remark")
     @Schema(description = "HITL检查点，触发HITL的依据，比如输入内容、工具调用等")
-    private String approveDescription;
-
+    private String auditRemark;
+    @TableField("auditor_id")
+    @Schema(description = "审核人ID，关联用户表")
+    private Long auditorId;
     @TableField("status")
     @Schema(description = "工具状态，0-启用，1-禁用")
     private Integer status;
