@@ -144,10 +144,8 @@ public class ChatController {
             if (output instanceof InterruptionMetadata interruptionMetadata) {
                hitlService.initHITL(toolDtos, userId, agentThreadId, interruptionMetadata);
                 //发生中断  设置状态为 待审核
-                recordAddDTO.setHitlStatus(HITLStatusEnum.WAITING.description);
             } else {
                 // 没有发生中断，设置状态为 无需审核
-                recordAddDTO.setHitlStatus(HITLStatusEnum.NON_AUDIT.description);
             }
             AssistantMessage response = HITLHelper.getAssistantResponse(result.get().state());
             // 保存聊天历史
@@ -157,7 +155,6 @@ public class ChatController {
             recordAddDTO.setBotResponse(response.getText());
             recordAddDTO.setUserId(userId);
             recordAddDTO.setToolCalls(ToolUtils.convertToolCall(response.getToolCalls()));
-            recordAddDTO.setThreadId(agentThreadId);
 
             chatRecordService.saveOneRecord(recordAddDTO);
 

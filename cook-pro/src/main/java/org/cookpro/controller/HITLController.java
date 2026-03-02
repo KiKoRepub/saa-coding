@@ -48,7 +48,7 @@ public class HITLController {
     }
 
     @PostMapping("/review")
-    public R<String> review(@RequestBody HITLReviewDTO dto) throws GraphRunnerException, IOException, InterruptedException {
+    public R<String> review(@RequestBody HITLReviewDTO dto) throws GraphRunnerException {
         return R.ok(hitlService.reviewHitl(dto));
     }
 

@@ -6,6 +6,7 @@ import com.alibaba.cloud.ai.graph.RunnableConfig;
 import com.alibaba.cloud.ai.graph.action.InterruptionMetadata;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import com.alibaba.cloud.ai.graph.exception.GraphRunnerException;
+import com.alibaba.cloud.ai.graph.streaming.StreamingOutput;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -48,8 +49,6 @@ public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
 
     @Resource
     SSEService sseService;
-    @Resource
-    ChatRecordService chatRecordService;
     @Resource
     MemoryCacheService memoryCacheService;
     @Resource
@@ -185,7 +184,7 @@ public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
 
     public void initHITL(List<ToolChatDTO> toolChatDTOList, Long publisherId, String agentThreadId, InterruptionMetadata interruptionMetadata) {
         // 发生了中断
-        // 获取中断的元信息，进行相应的处理（比如通知人工审核人员进行审核）
+        // 获取中断的元信息，进行相应的处理（保存审核记录 , 通知审核人员进行审核）
         HITLEntity hitlEntity = new HITLEntity();
 
         hitlEntity.setPublisherId(publisherId);
@@ -286,28 +285,42 @@ public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
 
                         }
                         // 保存审核信息
-                            HITLEntity hitlEntity = new HITLEntity();
+                        HITLEntity hitlEntity = new HITLEntity();
 
-                            hitlEntity.setPublisherId(publisherId);
+                        hitlEntity.setPublisherId(publisherId);
 
-                            hitlEntity.setInterruptData(interruptionMetadata);
-                            hitlEntity.setThreadId(threadId);
-                            hitlEntity.setReason("等待人工审核工具调用");
+                        hitlEntity.setInterruptData(interruptionMetadata);
+                        hitlEntity.setThreadId(threadId);
+                        hitlEntity.setReason("等待人工审核工具调用");
 
-                            hitlEntity.setRemark(remarkBuilder.toString());
-                            save(hitlEntity);
+                        hitlEntity.setRemark(remarkBuilder.toString());
+                        save(hitlEntity);
 
-                            sseService.sendMessage(publisherId, newAuditorId, SSEEventEnum.WAITING_AUDIT.eventName,
-                                    "您收到了一个新的人工审核请求，线程ID: " + threadId + "，请尽快处理。");
-                        }
+                        sseService.sendMessage(publisherId, newAuditorId, SSEEventEnum.WAITING_AUDIT.eventName,
+                                "您收到了一个新的人工审核请求，线程ID: " + threadId + "，请尽快处理。");
 
+                        // 传递 审核信息给用户
                         if (memoryCacheService.hasInterruptSink(threadId)) {
                             sink.tryEmitNext("[系统] 发生了工具调用中断，请等待人工审核结果...");
                         } else {
                             sink.tryEmitNext("[系统] 系统出现异常，无法处理人工审核，请稍后再试...");
                             sink.tryEmitComplete();
                         }
+
                     }
+                    // 没有中断，继续处理流式输出
+                    if (output instanceof StreamingOutput<?> streamingOutput) {
+                        // 处理流式数据
+                        String chunk = streamingOutput.chunk();
+
+                        if (chunk != null && !chunk.isEmpty()) {
+                            if (memoryCacheService.hasInterruptSink(threadId)) {
+                                sink.tryEmitNext(chunk);
+                            }
+                        }
+
+                    }
+                }
                 , error -> {
                     log.error("恢复执行过程中发生错误", error);
                     if (sink != null) {

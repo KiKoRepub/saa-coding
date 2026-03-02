@@ -6,10 +6,7 @@ import org.cookpro.R;
 import org.cookpro.entity.ChatRecord;
 import org.cookpro.service.ChatRecordService;
 import org.cookpro.vo.ChatRecordInfoVo;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -33,4 +30,13 @@ public class ChatRecordController {
     public R<List<ChatRecordInfoVo>> getChatHistoryByConversationId(@RequestParam("conversationId") String conversationId) {
         return R.ok(chatRecordService.listByConversationId(conversationId));
     }
+
+
+    @PostMapping("/add")
+    @Operation(summary = "添加聊天记录", description = "添加一条新的聊天记录")
+    public R<String> addChatRecord(@RequestBody ChatRecord chatRecord) {
+        chatRecordService.save(chatRecord);
+        return R.ok("聊天记录添加成功");
+    }
+
 }

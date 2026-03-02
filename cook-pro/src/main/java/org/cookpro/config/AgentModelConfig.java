@@ -8,7 +8,9 @@ import com.alibaba.cloud.ai.graph.agent.hook.hip.HumanInTheLoopHook;
 import com.alibaba.cloud.ai.graph.agent.hook.hip.ToolConfig;
 import com.alibaba.cloud.ai.graph.checkpoint.savers.MemorySaver;
 import com.alibaba.cloud.ai.graph.checkpoint.savers.mysql.MysqlSaver;
+import jakarta.annotation.Resource;
 import org.cookpro.config.properties.ToolEnvProperties;
+import org.cookpro.hooks.ToolNoticeHook;
 import org.cookpro.tools.WebSearchTool;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.support.ToolCallbacks;
@@ -37,6 +39,8 @@ public class AgentModelConfig {
         return chatModel;
     }
 
+    @Resource
+    ToolNoticeHook toolNoticeHook;
     @Bean
     public ReactAgent dashscopeHITLAgent(DashScopeChatModel chatModel,
                                      ToolEnvProperties toolEnvProperties) {
@@ -66,7 +70,7 @@ public class AgentModelConfig {
                 .name("human_in_loop_agent")
                 .model(chatModel)
                 .tools(webSearchToolCallbacks)
-                .hooks(humanInTheLoopHook)
+                .hooks(humanInTheLoopHook,toolNoticeHook)
                 .saver(memorySaver)
                 .build();
     }

@@ -170,7 +170,23 @@ public class TestController {
         return sink.asFlux();
 
     }
-
+    private Flux<String>  convertToStringFlux(Flux<NodeOutput> outputFlux){
+        return outputFlux.flatMap(out -> {
+            if (out instanceof InterruptionMetadata interruptionMetadata) {
+                // 处理人工介入中断
+                testHitldata = interruptionMetadata;
+                return Flux.just("[系统] 发生了工具调用中断，请等待人工审核结果...");
+            } else if (out instanceof StreamingOutput<?> streamingOutput) {
+                // 处理流式输出
+                String chunk = streamingOutput.chunk();
+                if (chunk != null && !chunk.isEmpty()) {
+//                    SystemPrinter.println("流式chunk: " + chunk);
+                    return Flux.just(chunk);
+                }
+            }
+            return Flux.empty();
+        });
+    }
 
     @GetMapping(value = "/approve", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public void approve() throws GraphRunnerException {

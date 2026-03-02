@@ -26,21 +26,6 @@ public class ChatRecord extends BaseEntity {
         @TableField("conversation_id")
         @Schema(description = "会话ID，相同会话ID的消息属于同一次对话")
         private String conversationId;
-
-        @TableField("thread_id")
-        @Schema(description = "线程ID，相同线程ID的消息属于同一个线程")
-        private String threadId;
-
-        /**
-         * USER / ASSISTANT / TOOL / AUDIT
-         */
-        @TableField("record_type")
-        @Schema(description = "消息类型，USER / ASSISTANT / TOOL / AUDIT")
-        private String recordType;
-
-        @TableField("parent_id")
-        private Long parentId;
-
         /**
          * 用户消息
          */
@@ -58,16 +43,6 @@ public class ChatRecord extends BaseEntity {
          */
         @TableField(value = "tool_call")
         private String toolCall;
-
-        /**
-         * tool result string
-         */
-        @TableField("tool_result")
-        private String toolResult;
-
-
-        @TableField("hitl_status")
-        private String hitlStatus;
 
 }
 /*
