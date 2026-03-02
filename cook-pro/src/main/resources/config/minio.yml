@@ -1,5 +1,5 @@
 minio:
-  endPoint: https://127.0.0.1:9001/
+  endPoint: http://127.0.0.1:9000/
   accessKey: minioadmin
   secretKey: minioadmin
   bucketName: recipe-bucket

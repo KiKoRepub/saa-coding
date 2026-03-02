@@ -32,22 +32,32 @@ CookPro 是一个基于 Spring AI Alibaba 框架开发的综合烹饪辅助智�
 │   Web Client    │◄──►│   REST API      │◄──►│   AI Agent       │
 │   (SSE/HTTP)    │    │   (Controllers) │    │   (ReactAgent)   │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
-                              │                        │
-                              ▼                        ▼
-                       ┌─────────────────┐    ┌─────────────────┐
-                       │   Services      │    │   Tools & Hooks  │
-                       │   (Business     │    │   (HITL, RAG)    │
-                       │    Logic)       │    │                 │
-                       └─────────────────┘    └─────────────────┘
-                              │                        │
-                              ▼                        ▼
-                       ┌─────────────────┐    ┌─────────────────┐
-                       │   Data Access   │    │   External       │
-                       │   (MyBatis-Plus)│    │   Services       │
-                       │                 │    │   (DashScope,    │
-                       └─────────────────┘    │    Milvus, etc.) │
-                                              └─────────────────┘
+                             │                        │
+                             ▼                        ▼
+                      ┌─────────────────┐    ┌─────────────────┐
+                      │   Services      │    │   Tools & Hooks  │
+                      │   (Business     │    │   (HITL, RAG)    │
+                      │    Logic)       │    │                 │
+                      └─────────────────┘    └─────────────────┘
+                             │                        │
+                             ▼                        ▼
+                      ┌─────────────────┐    ┌─────────────────┐
+                      │   Data Access   │    │   External       │
+                      │   (MyBatis-Plus)│    │   Services       │
+                      │                 │    │   (DashScope,    │
+                      └─────────────────┘    │    Milvus, etc.) │
+                                             └─────────────────┘
 ```
+
+## 项目结构（cook-pro 模块）
+
+- **后端应用**
+  - `src/main/java/org/cookpro`：核心代码，包含 `CookProApplication` 启动类、`controller`、`service`、`mapper`、`config`、`tools`、`hooks` 等。
+  - `src/main/resources/application.yaml`：主配置文件，导入 `config/agent.yml`、`config/vector.yml`、`config/mysql.yml`、`config/minio.yml`、`config/redis.yml`、`config/tool-env.yml` 以及可选的 `.env[.properties]`。
+  - `src/main/resources/config/*.yml`：向量数据库、MySQL、Redis、MinIO、工具环境等子配置。
+- **前端/调试页面**
+  - `web/stream-test.html`：流式输出 / HITL 测试页面。
+  - `web/aa.js`：浏览器端流式读取 / SSE 解析逻辑。
 
 ## 主要组件
 
@@ -76,21 +86,32 @@ CookPro 是一个基于 Spring AI Alibaba 框架开发的综合烹饪辅助智�
 - **向量数据库**：Milvus 连接和嵌入模型配置
 - **工具环境**：外部工具的 API 密钥和配置
 
-## API 接口
+## API 接口（部分）
 
-### 聊天接口
+### 聊天 & RAG 相关
 ```
-POST /chat/chatMore          # 增强聊天（支持工具、RAG、HITL）
-POST /chat/stream/chatMore   # 流式增强聊天
-GET  /chat/chat              # 基础聊天
+POST /chat/chatMore            # 增强聊天（支持工具、RAG、HITL）
+POST /chat/stream/chatMore     # 流式增强聊天
+GET  /chat/chat                # 基础聊天
+POST /rag/recipe/search        # 食谱 RAG 检索
+POST /rag/recipe/rebuild       # 重建/刷新食谱向量索引
 ```
 
-### 测试接口
+### HITL / 流式测试接口
 ```
-GET  /test/humanInLoop       # HITL 测试
-GET  /test/stream/humanInLoop # 流式 HITL 测试
-POST /test/approve           # HITL 审核通过
+GET  /test/humanInLoop         # HITL 测试
+GET  /test/stream/humanInLoop  # 流式 HITL 测试（web/stream-test.html 默认使用）
+POST /test/approve             # HITL 审核通过
 ```
+
+### 其他常用接口（示例）
+> 详细参数与完整接口请通过 Swagger/OpenAPI 文档查看：`http://localhost:13002/swagger-ui/index.html`
+
+- `RecipeController`：食谱增删改查、列表分页等。
+- `FileController`：基于 MinIO 的文件上传、下载与预览。
+- `ToolController`：工具配置管理、工具触发测试等。
+- `HITLController` / `SSEUserRecordController`：HITL 审核流程、SSE 推送记录。
+- `UserController` / `UserPreferenceController`：用户与偏好设置管理。
 
 ## 数据模型
 
@@ -109,22 +130,28 @@ POST /test/approve           # HITL 审核通过
 - Redis 6.x
 - Milvus 2.x
 - MinIO
-- Ollama (可选，用于本地嵌入)
+- Ollama（可选，用于本地嵌入）
 
 ### 配置步骤
-1. 安装并启动依赖服务（MySQL、Redis、Milvus、MinIO）
-2. 配置 `.env` 文件中的 API 密钥
-3. 运行 Ollama 并拉取嵌入模型：
+1. 安装并启动依赖服务：**MySQL、Redis、Milvus、MinIO**。
+2. 在 `src/main/resources/config/mysql.yml`、`redis.yml`、`minio.yml`、`vector.yml`、`tool-env.yml` 中配置数据库、缓存、对象存储、向量库和外部工具参数。
+3. 如需隐藏敏感信息（API Key 等），可在工程根目录或类路径下配置 `.env` / `.env.properties`，并在其中维护密钥，`application.yaml` 会自动导入。
+4. 如需使用本地嵌入模型，安装并启动 Ollama，并拉取所需模型：
    ```bash
    ollama pull embeddinggemma
    ```
-4. 启动应用：
-   ```bash
-   ./gradlew bootRun
-   ```
+
+### 启动方式
+- **IDE 运行**：导入为 Gradle 项目，找到 `org.cookpro.CookProApplication`，直接运行 main 方法。
+- **命令行运行（示例）**：
+  ```bash
+  # 在仓库根目录
+  ./gradlew :cook-pro:build
+  # 使用 IDE 或 java -jar 运行生成的可执行 Jar（如已配置 Spring Boot 打包）
+  ```
 
 ### 端口配置
-- 应用端口：13002
+- 应用端口：13002（见 `application.yaml`）
 - MySQL：3306
 - Redis：6379
 - Milvus：19530
@@ -141,6 +168,11 @@ POST /test/approve           # HITL 审核通过
 ```bash
 ./gradlew test
 ```
+
+### 本地流式 / HITL 测试
+1. 确保后端已在本地 `13002` 端口启动。
+2. 直接用浏览器打开 `cook-pro/web/stream-test.html`（本地文件即可，不必通过 Web 服务器托管）。
+3. 点击“开始流式请求”按钮，页面会调用 `GET http://localhost:13002/test/stream/humanInLoop`，并在界面上实时展示流式 / SSE 返回内容。
 
 ### 添加新工具
 1. 在 `ToolEntity` 表中添加工具配置
@@ -178,10 +210,12 @@ POST /test/approve           # HITL 审核通过
 - **多租户架构**：支持多用户隔离
 
 ## 许可证
-[请添加许可证信息]
+
+当前尚未明确指定开源许可证，默认保留所有权利。如需在生产环境或商业场景中使用，请先与作者沟通确认。
 
 ## 贡献
 欢迎提交 Issue 和 Pull Request 来改进项目。
 
 ## 联系方式
-[请添加联系信息]
+
+- Telegram：待补充

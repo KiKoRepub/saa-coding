@@ -68,7 +68,7 @@ public class FileUploadService {
 
     public String getPreviewUrl(String objectName) {
         if (objectExists(objectName))
-            return minIoService.getObjectUrl(DEFAULT_BUCKET_NAME, objectName,DEFAULT_EXPIRE_TIME);
+            return minIoService.getObjectUrl(DEFAULT_BUCKET_NAME, objectName,getExpireSeconds());
         else return objectName;
     }
 

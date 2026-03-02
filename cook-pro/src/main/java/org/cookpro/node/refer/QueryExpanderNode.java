@@ -1,4 +1,4 @@
-package org.cookpro.node;
+package org.cookpro.node.refer;
 import com.alibaba.cloud.ai.graph.OverAllState;
 import com.alibaba.cloud.ai.graph.RunnableConfig;
 import com.alibaba.cloud.ai.graph.action.NodeActionWithConfig;
