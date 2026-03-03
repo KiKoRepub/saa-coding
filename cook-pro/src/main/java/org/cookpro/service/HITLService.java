@@ -331,10 +331,13 @@ public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
                             SSEEventEnum.ERROR.eventName,
                             "执行恢复过程中发生错误，原因是: " + error.getMessage());
                 }, () -> {
+                    // 执行完成，清理缓存等资源
                     if (sink != null) {
                         sink.tryEmitComplete();
                         memoryCacheService.removeInterruptSink(threadId);
                     }
+                    memoryCacheService.clearToolCallHistory(threadId);
+
                     sseService.sendMessage(auditorId, publisherId,
                             SSEEventEnum.COMPLETED.eventName,
                             "执行已完成。");
@@ -377,6 +380,7 @@ public class HITLService extends ServiceImpl<HITLMapper, HITLEntity> {
 
 
     public List<HITLToolArgInfo> getToolArgInfo(Long id,String toolName) throws JsonProcessingException {
+        // 根据 HITL 记录ID 和工具名称，获取该工具的参数信息，供审核人员编辑使用
         HITLEntity entity = getById(id);
 
         InterruptionMetadata interruptData = entity.getInterruptData();

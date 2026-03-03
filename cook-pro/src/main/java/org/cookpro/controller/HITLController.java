@@ -3,6 +3,7 @@ package org.cookpro.controller;
 import com.alibaba.cloud.ai.graph.exception.GraphRunnerException;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.annotation.Resource;
 import org.cookpro.R;
 import org.cookpro.dto.HITLEditInfoDTO;
@@ -27,6 +28,7 @@ public class HITLController {
 
 
     @GetMapping("/getToolArgs")
+    @Operation(summary = "获取工具参数信息", description = "根据工具名称和 HITL 记录 ID 获取对应的工具参数信息")
     public R<List<HITLToolArgInfo>> getToolArgInfo(@RequestParam("toolName")String toolName,
                                                    @RequestParam("id")Long id) throws JsonProcessingException {
         return R.ok(hitlService.getToolArgInfo(id,toolName));

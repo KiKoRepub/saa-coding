@@ -21,6 +21,7 @@ import org.cookpro.entity.ChatRecord;
 import org.cookpro.dto.ToolChatDTO;
 import org.cookpro.enums.HITLStatusEnum;
 import org.cookpro.exception.ChatException;
+import org.cookpro.hooks.ToolNoticeHook;
 import org.cookpro.service.*;
 import org.cookpro.utils.HITLHelper;
 import org.cookpro.config.factory.ToolFactory;
@@ -47,14 +48,10 @@ public class ChatController {
     ToolService toolService;
     @Resource
     HITLService hitlService;
-    @Resource
-    ToolFactory toolFactory;
 
     @Resource
     RAGService ragService;
 
-    //    @Resource
-//    FluxResponseService fluxResponseService;
     @Resource
     MemoryCacheService memoryCacheService;
 
@@ -63,7 +60,9 @@ public class ChatController {
 
     @Resource
     UserPreferenceService userPreferenceService;
-    private final DashScopeChatModel chatModel;// 构造函数中初始化
+    @Resource
+    ToolNoticeHook toolNoticeHook;
+    private final ChatModel chatModel; // 构造函数中初始化
     private static final AgentBackground BACKGROUND = AgentBackground.COOKING_ASSISTANT;
 
     @GetMapping("/chat")
@@ -107,6 +106,8 @@ public class ChatController {
         // 根据用户的选项，构建对应的 Hook 列表，并将其添加到 Agent 中
 
         List<Hook> hookList = new LinkedList<>();
+        // 默认添加 工具调用通知 Hook， 用于在工具调用时向用户发送通知消息
+        hookList.add(toolNoticeHook);
         if (dto.getHitlEnabled()) {
             hookList.add(HITLHelper.buildHITLHook(toolDtos));
         }
@@ -141,12 +142,11 @@ public class ChatController {
 
 
             ChatRecordAddDTO recordAddDTO = new ChatRecordAddDTO();
+
             if (output instanceof InterruptionMetadata interruptionMetadata) {
-               hitlService.initHITL(toolDtos, userId, agentThreadId, interruptionMetadata);
-                //发生中断  设置状态为 待审核
-            } else {
-                // 没有发生中断，设置状态为 无需审核
+                hitlService.initHITL(toolDtos, userId, agentThreadId, interruptionMetadata);
             }
+
             AssistantMessage response = HITLHelper.getAssistantResponse(result.get().state());
             // 保存聊天历史
 
@@ -243,7 +243,7 @@ public class ChatController {
     public ChatController(AgentModelFactory factory) {
         Optional<ChatModel> agentModel = factory.getAgentModel(BACKGROUND);
         if (agentModel.isPresent()) {
-            this.chatModel = (DashScopeChatModel) agentModel.get();
+            this.chatModel = agentModel.get();
         } else {
             throw new IllegalStateException("未找到烹饪助手的聊天模型");
         }

@@ -1,20 +1,17 @@
 package org.cookpro.controller;
 
-import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatModel;
-import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.annotation.Resource;
 import org.cookpro.R;
 import org.cookpro.dto.RecipeAddDTO;
+import org.cookpro.dto.RecipeQueryDTO;
 import org.cookpro.exception.ChatException;
-import org.cookpro.hooks.RAGMessagesHook;
 import org.cookpro.service.RecipeRAGService;
-import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.vectorstore.VectorStore;
+import org.cookpro.vo.RecipeQueryVo;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.util.List;
 
 @RestController
 @RequestMapping("/rag")
@@ -25,7 +22,17 @@ public class RAGController {
     RecipeRAGService recipeRAGService;
 
 
+    @PostMapping("/query")
+    @Operation(summary = "查询菜谱", description = "根据用户输入的查询内容，返回相关的菜谱信息")
+    public R<List<RecipeQueryVo>> queryRAGRecipe(@RequestBody RecipeQueryDTO dto) throws ChatException {
+        return R.ok(recipeRAGService.queryRecipe(dto));
+    }
 
+    @GetMapping("/recommand")
+    @Operation(summary = "推荐菜谱", description = "根据用户输入的查询内容，推荐相关的菜谱信息")
+    public R<List<RecipeQueryVo>> recommandRAGRecipe(@RequestParam("id")Long userId){
+        return R.ok(recipeRAGService.recommendRecipe(userId));
+    }
 
     @PostMapping(value = "/addRecipe")
     public R<String> addRAGRecipe(RecipeAddDTO dto) throws IOException {

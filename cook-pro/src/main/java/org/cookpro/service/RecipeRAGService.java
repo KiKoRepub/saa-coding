@@ -1,13 +1,16 @@
 package org.cookpro.service;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
 import org.cookpro.dto.RecipeAddDTO;
+import org.cookpro.dto.RecipeQueryDTO;
+import org.cookpro.dto.UserPreferenceDTO;
 import org.cookpro.entity.Recipe;
-import org.cookpro.mapper.RecipeMapper;
+import org.cookpro.vo.RecipeQueryVo;
+import org.cookpro.vo.UserPreferenceVo;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 
@@ -23,21 +26,30 @@ public class RecipeRAGService{
 
     @Resource
     private VectorStore vectorStore;
+    @Resource
+    private UserPreferenceService userPreferenceService;
 
     private static final ObjectMapper  objectMapper = new ObjectMapper();
 
-    // RecipeService.java
-    public String toSearchableText(Recipe recipe) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("菜名：").append(recipe.getDashName()).append("\n");
-        sb.append("食材：").append(recipe.getIngredients()).append("\n");
-        sb.append("调料：").append(recipe.getToppings()).append("\n");
-        sb.append("步骤：\n");
-        for (int i = 0; i < recipe.getSteps().size(); i++) {
-            sb.append((i + 1)).append(". ").append(recipe.getSteps().get(i)).append("\n");
-        }
-        return sb.toString().trim();
+    public List<RecipeQueryVo> queryRecipe(RecipeQueryDTO dto) {
+        String query = dto.getQuery();
+        List<Document> documentList = vectorStore.similaritySearch(SearchRequest.builder()
+                .query(query)
+                .topK(dto.getTopK())
+                .filterExpression("user_id = " + dto.getUserId())
+                .build());
+
+        return documentList.stream()
+                .map(this::toQueryVo)
+                .toList();
     }
+
+    private RecipeQueryVo toQueryVo(Document document) {
+
+
+    }
+    // RecipeService.java
+
     public String addVectorRecipe(RecipeAddDTO dto) throws IOException {
 
         Recipe recipe = new Recipe();
@@ -63,9 +75,7 @@ public class RecipeRAGService{
         }
 
 
-        List<Recipe> recipes = Arrays.asList(
-                objectMapper.readValue(is, Recipe[].class)
-        );
+        List<Recipe> recipes = Collections.singletonList(objectMapper.readValue(is, Recipe.class));
 
         return addVectorRecipe(recipes);
     }
@@ -73,7 +83,7 @@ public class RecipeRAGService{
 
 
 
-    public String addVectorRecipe(List<Recipe> recipes) throws IOException {
+    public String addVectorRecipe(List<Recipe> recipes){
         List<Document> documents = recipes.stream()
                 .map(this::toDocument)
                 .toList();
@@ -91,11 +101,22 @@ public class RecipeRAGService{
         Map<String, Object> metadata = Map.of(
                 "id", UUID.randomUUID(),
                 "dishName", recipe.getDashName(),
-                "imageUrl", recipe.getImageUrl()
+                "imageUrl", recipe.getImageUrl(),
+                "createUser", recipe.getCreateUser()
         );
         return new Document(content, metadata);
     }
-
+    private String toSearchableText(Recipe recipe) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("菜名：").append(recipe.getDashName()).append("\n");
+        sb.append("食材：").append(recipe.getIngredients()).append("\n");
+        sb.append("调料：").append(recipe.getToppings()).append("\n");
+        sb.append("步骤：\n");
+        for (int i = 0; i < recipe.getSteps().size(); i++) {
+            sb.append((i + 1)).append(". ").append(recipe.getSteps().get(i)).append("\n");
+        }
+        return sb.toString().trim();
+    }
 
     private InputStream tryToLoadFromUrl(String filePath) {
         if (filePath == null || filePath.trim().isEmpty()) {
@@ -117,5 +138,18 @@ public class RecipeRAGService{
             // log.warn("Failed to load resource from URL: " + filePath, e);
             return null; // “try”语义：失败返回 null，不抛异常
         }
+    }
+
+    public List<RecipeQueryVo> recommendRecipe(Long userId) {
+        UserPreferenceVo preference = userPreferenceService.getPreference(userId);
+
+        String preferContent = preference.getPreferContent();// 这里可以根据用户偏好构建查询条件，进行向量搜索推荐菜谱
+
+        List<Document> documentList = vectorStore.similaritySearch(SearchRequest.builder()
+                .query(preferContent)
+                .topK(5) // 推荐前5个菜谱
+                .filterExpression("user_id = " + userId) // 可选：根据用户ID过滤
+                .build());
+
     }
 }

@@ -3,6 +3,10 @@ package org.cookpro;
 
 import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatModel;
 import org.springframework.ai.chat.model.ChatModel;
+
+/*
+    集中管理 agent 的背景信息和使用的模型类
+ */
 public enum AgentBackground {
 
 

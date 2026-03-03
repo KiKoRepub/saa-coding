@@ -7,7 +7,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.cookpro.R;
 import org.cookpro.dto.UserLoginDTO;
+import org.cookpro.service.RedisService;
 import org.cookpro.service.SSEService;
+import org.cookpro.service.UserPreferenceService;
 import org.cookpro.service.UserService;
 import org.cookpro.sse.SSEServer;
 import org.cookpro.utils.ValidateCodeUtils;
@@ -26,6 +28,8 @@ public class UserController {
     private SSEService sseService;
     @Resource
     private UserService userService;
+    @Resource
+    UserPreferenceService userPreferenceService;
     private static final String VALIDATE_CODE = "VALIDATE_CODE";
 
 
@@ -56,11 +60,25 @@ public class UserController {
             // stringRedisTemplate.delete("VALIDATE_CODE:" + sessionId);
             // 消费掉积压的消息
             sseService.onUserConnect(userId, SSEServer.connect(userId));
-        }
+            // 登录成功后分析用户偏好
+            userPreferenceService.analyzePreferencesWithCache(userId);
 
-        return R.ok("登陆成功");
+            return R.ok("登陆成功");
+        }
+        return R.error("验证码错误");
+
     }
 
+
+    @PostMapping("/register")
+    @Operation(summary = "用户注册")
+    public R<String> register(@RequestBody UserLoginDTO dto){
+        Long userId = userService.register(dto);
+        if (userId == null) {
+            return R.error("注册失败，用户名可能已存在");
+        }
+        return R.ok("注册成功");
+    }
 
     @GetMapping("/code")
     @Operation(summary = "获取验证码图片")
