@@ -10,3 +10,4 @@ spring:
       - classpath:config/minio.yml
       - classpath:config/redis.yml
       - classpath:config/tool-env.yml
+      - classpath:config/sa-token.yml

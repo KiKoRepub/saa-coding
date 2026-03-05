@@ -40,7 +40,7 @@ public class AgentModelConfig {
     }
 
     @Resource
-    ToolNoticeHook toolNoticeHook;
+    ToolNoticeHook toolNoticeHook; // 引入 调用工具的 通知Hook
     @Bean
     public ReactAgent dashscopeHITLAgent(DashScopeChatModel chatModel,
                                      ToolEnvProperties toolEnvProperties) {

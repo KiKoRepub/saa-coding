@@ -3,4 +3,5 @@ rootProject.name = 'saa-coding'
 
 include 'quick-start'
 include 'cook-pro'
+include 'saToken-study'
 

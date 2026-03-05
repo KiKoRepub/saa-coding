@@ -1,0 +1,53 @@
+# 端口
+server:
+  port: 9000
+
+# Sa-Token 配置
+sa-token:
+  # 打印操作日志
+  is-log: true
+    # SSO-模式一相关配置  (非模式一不需要配置)
+  cookie:
+    # 配置 Cookie 作用域
+     domain: stp.com
+
+  # SSO-Server 配置
+  sso-server:
+    allow-anon-client: true # 是否允许匿名客户端访问，默认为 false
+      # 是否在登录时注册单点登录回调接口 (匿名应用想要参与单点注销必须打开这个)
+    reg-logout-call: true   # (客户端)
+    # Ticket有效期 (单位: 秒)，默认五分钟
+    ticket-timeout: 300
+    # 应用列表：配置接入的应用信息
+    clients:
+      # 应用 sso-client1：采用模式一对接 (同域、同Redis)
+      sso-client1:
+
+        client: sso-client1
+        allow-url: "http://sa-sso-client1.com:9000/**"
+      # 应用 sso-client2：采用模式二对接 (跨域、同Redis)
+      sso-client2:
+        client: sso-client2
+        allow-url: "*"
+        secret-key: SSO-C2-kQwIOrYvnXmSDkwEiFngrKidMcdrgKor
+      # 应用 sso-client3：采用模式三对接 (跨域、跨Redis)
+      sso-client3:
+        # 应用名称
+        client: sso-client3
+        # 允许授权地址
+        allow-url: "*"
+        # 是否接收消息推送
+        is-push: true
+        # 消息推送地址
+        push-url: http://sa-sso-client1.com:9003/sso/pushC
+        # 接口调用秘钥 (如果不配置则使用全局默认秘钥)
+        secret-key: SSO-C3-kQwIOrYvnXmSDkwEiFngrKidMcdrgKor
+
+spring:
+  data:
+    redis:
+      host: localhost
+      port: 6380
+      username: default
+      password:
+

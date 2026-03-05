@@ -29,6 +29,7 @@ dependencies {
 
     // Redis
     implementation "org.springframework.boot:spring-boot-starter-data-redis:${springBootVersion}"
+
     // Spring AI 相关依赖
 //    implementation "org.springframework.ai:spring-ai-rag:${springAiVersion}"
     implementation "org.springframework.ai:spring-ai-advisors-vector-store:${springAiVersion}"
@@ -37,7 +38,7 @@ dependencies {
 
     // 其他工具依赖
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
-    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"  // ✅ 必须加上这行！
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springDocVersion}"
     implementation "cn.hutool:hutool-all:${hutoolVersion}"
     implementation "com.squareup.okhttp3:okhttp:4.12.0"
@@ -45,8 +46,14 @@ dependencies {
     // minio 依赖
     implementation "io.minio:minio:${minioVersion}"
 
-    // redisson (RedisSaver 依赖)
-//    implementation 'org.redisson:redisson:3.52.0'
+//    // sa-token 依赖 (User 登录鉴权)
+//    implementation "cn.dev33:sa-token-spring-boot-starter:${saTokenVersion}"// 权限认证
+//    implementation "cn.dev33:sa-token-sso:${saTokenVersion}"//整合SSO - 插件
+//    implementation "cn.dev33:sa-token-redis-template:${saTokenVersion}"// Sa-Token 整合 RedisTemplate
+//    implementation "org.apache.commons:commons-pool2"
+////    implementation "cn.dev33:sa-token-alone-redis:${saTokenVersion}"// Sa-Token插件：权限缓存与业务缓存分离
+//
+
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'

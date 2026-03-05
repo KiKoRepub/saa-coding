@@ -42,7 +42,6 @@ public class ToolNoticeHook extends ModelHook {
                 // 发送 通知
                 List<AssistantMessage.ToolCall> toolCalls = assistantResponse.getToolCalls();
 
-                memoryCacheService.cacheToolCallHistory(threadId, toolCalls);
 
                 List<ToolCallVo> toolCallVo = ToolUtils.serializeToolCalls(toolCalls);
 
@@ -50,6 +49,8 @@ public class ToolNoticeHook extends ModelHook {
                     sink.tryEmitNext("调用工具:" + callVo.getToolName() + "......\n");
                 }
 
+                // 缓存工具调用记录
+                memoryCacheService.cacheToolCallHistory(threadId, toolCalls);
             }
         }
 
