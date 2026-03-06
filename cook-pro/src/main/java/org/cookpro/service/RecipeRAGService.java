@@ -44,10 +44,7 @@ public class RecipeRAGService{
                 .toList();
     }
 
-    private RecipeQueryVo toQueryVo(Document document) {
 
-
-    }
     // RecipeService.java
 
     public String addVectorRecipe(RecipeAddDTO dto) throws IOException {
@@ -94,7 +91,20 @@ public class RecipeRAGService{
         return "成功添加 " + recipes.size() + " 个菜谱到向量数据库。";
     }
 
+    public List<RecipeQueryVo> recommendRecipe(Long userId) {
+        UserPreferenceVo preference = userPreferenceService.getPreference(userId);
 
+        String preferContent = preference.getPreferContent();// 这里可以根据用户偏好构建查询条件，进行向量搜索推荐菜谱
+
+        List<Document> documentList = vectorStore.similaritySearch(SearchRequest.builder()
+                .query(preferContent)
+                .topK(5) // 推荐前5个菜谱
+                .filterExpression("user_id = " + userId) // 可选：根据用户ID过滤
+                .build());
+        return documentList.stream()
+                .map(this::toQueryVo)
+                .toList();
+    }
 
     private Document toDocument(Recipe recipe){
         String content = toSearchableText(recipe);
@@ -139,17 +149,9 @@ public class RecipeRAGService{
             return null; // “try”语义：失败返回 null，不抛异常
         }
     }
-
-    public List<RecipeQueryVo> recommendRecipe(Long userId) {
-        UserPreferenceVo preference = userPreferenceService.getPreference(userId);
-
-        String preferContent = preference.getPreferContent();// 这里可以根据用户偏好构建查询条件，进行向量搜索推荐菜谱
-
-        List<Document> documentList = vectorStore.similaritySearch(SearchRequest.builder()
-                .query(preferContent)
-                .topK(5) // 推荐前5个菜谱
-                .filterExpression("user_id = " + userId) // 可选：根据用户ID过滤
-                .build());
-
+    private RecipeQueryVo toQueryVo(Document document) {
+        RecipeQueryVo vo = new RecipeQueryVo();
+        return vo;
     }
+
 }

@@ -3,6 +3,7 @@ package org.cookpro;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cookpro.config.properties.ToolEnvProperties;
+import org.cookpro.config.properties.UserConfigProperties;
 import org.springframework.ai.chat.messages.AbstractMessage;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.ToolResponseMessage;
@@ -30,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 @SpringBootApplication
-@EnableConfigurationProperties(ToolEnvProperties.class)
+@EnableConfigurationProperties({ToolEnvProperties.class})
 public class CookProApplication {
     public static void main(String[] args) {
         SpringApplication.run(CookProApplication.class, args);

@@ -42,15 +42,18 @@ public class Recipe extends BaseEntity{
 }
 /*
 CREATE TABLE `recipe` (
-  `id`              BIGINT        NOT NULL COMMENT '菜谱ID',
-  `dash_name`       VARCHAR(255)  DEFAULT NULL COMMENT '菜名',
-  `ingredients`     VARCHAR(1024) DEFAULT NULL COMMENT '食材',
-  `toppings`        VARCHAR(1024) DEFAULT NULL COMMENT '调料',
-  `steps`           JSON          DEFAULT NULL COMMENT '步骤（JSON格式存储有序步骤列表）',
-  `image_url`       VARCHAR(512)  DEFAULT NULL COMMENT '图片链接',
-  `deleted`         TINYINT       NOT NULL DEFAULT '0' COMMENT '逻辑删除字段，0表示未删除，1表示已删除',
-  `create_time`     DATETIME      DEFAULT NULL COMMENT '创建时间',
-  `update_time`     DATETIME      DEFAULT NULL COMMENT '更新时间',
-  PRIMARY KEY (`id`)
+  `id`              BIGINT       NOT NULL COMMENT '菜谱ID',
+  `dash_name`       VARCHAR(255) DEFAULT NULL COMMENT '菜名',
+  `ingredients`     TEXT         DEFAULT NULL COMMENT '食材',
+  `toppings`        TEXT         DEFAULT NULL COMMENT '调料',
+  `steps`           TEXT         DEFAULT NULL COMMENT '步骤（JSON数组格式存储）',
+  `image_url`       VARCHAR(512) DEFAULT NULL COMMENT '图片链接',
+  `deleted`         TINYINT      NOT NULL DEFAULT '0' COMMENT '逻辑删除字段，0表示未删除，1表示已删除',
+  `create_user`     VARCHAR(255) DEFAULT NULL COMMENT '创建用户',
+  `create_time`     DATETIME     DEFAULT NULL COMMENT '创建时间',
+  `update_time`     DATETIME     DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  -- 可选：按菜名检索的索引，提升查询效率
+  INDEX idx_recipe_dash_name (`dash_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='菜谱表';
  */

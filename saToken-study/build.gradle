@@ -1,0 +1,35 @@
+plugins {
+    id 'java'
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+
+    implementation "org.springframework.boot:spring-boot-starter:${springBootVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
+
+    // sa-token 依赖 (User 登录鉴权)
+    implementation "cn.dev33:sa-token-spring-boot3-starter:${saTokenVersion}"// 权限认证
+//    implementation "cn.dev33:sa-token-sso:${saTokenVersion}"//整合SSO - 插件
+//    implementation "cn.dev33:sa-token-redis-template:${saTokenVersion}"// Sa-Token 整合 RedisTemplate
+//    implementation "org.apache.commons:commons-pool2"
+//    implementation "cn.dev33:sa-token-alone-redis:${saTokenVersion}"// Sa-Token插件：权限缓存与业务缓存分离
+
+    // Redis
+    implementation "org.springframework.boot:spring-boot-starter-data-redis:${springBootVersion}"
+
+
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+}
+
+test {
+    useJUnitPlatform()
+}

@@ -2,19 +2,33 @@ package org.cookpro.utils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.cookpro.tools.alibaba.BaseAlibabaToolInter;
 import org.cookpro.vo.ToolCallVo;
 import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.model.ToolContext;
+import org.springframework.ai.tool.ToolCallback;
+import org.springframework.ai.tool.function.FunctionToolCallback;
 import org.w3c.dom.stylesheets.LinkStyle;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 public class ToolUtils {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
+
+
+    public static<T,R> ToolCallback buildToolCallback(BaseAlibabaToolInter<T,R> functionTool){
+        return FunctionToolCallback
+                .builder(functionTool.getToolName(), functionTool)
+                .description(functionTool.getToolDescription())
+                .inputType(functionTool.getInputType())
+                .build();
+    }
 
     public static List<String> convertToolCall(List<AssistantMessage.ToolCall> toolCalls){
         return toolCalls.stream()

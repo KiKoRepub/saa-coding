@@ -1,48 +1,34 @@
 package org.cookpro.controller;
 
 import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatModel;
-import com.alibaba.cloud.ai.graph.GraphRunner;
 import com.alibaba.cloud.ai.graph.NodeOutput;
 import com.alibaba.cloud.ai.graph.OverAllState;
 import com.alibaba.cloud.ai.graph.RunnableConfig;
 import com.alibaba.cloud.ai.graph.action.InterruptionMetadata;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 
-import com.alibaba.cloud.ai.graph.checkpoint.Checkpoint;
-import com.alibaba.cloud.ai.graph.checkpoint.savers.redis.RedisSaver;
+import com.alibaba.cloud.ai.graph.checkpoint.savers.MemorySaver;
 import com.alibaba.cloud.ai.graph.exception.GraphRunnerException;
 
+import com.alibaba.cloud.ai.graph.store.StoreItem;
+import com.alibaba.cloud.ai.graph.store.stores.FileSystemStore;
 import com.alibaba.cloud.ai.graph.streaming.StreamingOutput;
-import com.alibaba.druid.wall.WallConfig;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
-import org.cookpro.config.properties.ToolEnvProperties;
+import org.cookpro.config.properties.UserConfigProperties;
 import org.cookpro.entity.HITLToolArgInfo;
 import org.cookpro.exception.ChatException;
 import org.cookpro.hooks.RAGMessagesHook;
 import org.cookpro.service.MemoryCacheService;
-import org.cookpro.service.RedisService;
-import org.cookpro.tools.WebSearchTool;
+import org.cookpro.tools.alibaba.UserGetInfoTool;
 import org.cookpro.utils.HITLHelper;
-import org.cookpro.utils.ResponseUtils;
 import org.cookpro.utils.SystemPrinter;
 import org.cookpro.utils.ToolUtils;
 import org.cookpro.vo.ToolCallVo;
-import org.jetbrains.annotations.NotNull;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.messages.AbstractMessage;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.ToolResponseMessage;
-import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.support.ToolCallbacks;
-import org.springframework.ai.tool.ToolCallback;
-import org.springframework.ai.tool.function.FunctionToolCallback;
-import org.springframework.ai.tool.method.MethodToolCallback;
 
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -50,7 +36,6 @@ import reactor.core.publisher.Sinks;
 
 import java.nio.charset.Charset;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/test")
@@ -67,6 +52,10 @@ public class TestController {
 
     @Resource
     MemoryCacheService memoryCacheService;
+
+    @Resource
+    UserConfigProperties userConfigProperties;
+
     public volatile InterruptionMetadata testHitldata;
 
     @GetMapping("/rag")
@@ -170,23 +159,7 @@ public class TestController {
         return sink.asFlux();
 
     }
-    private Flux<String>  convertToStringFlux(Flux<NodeOutput> outputFlux){
-        return outputFlux.flatMap(out -> {
-            if (out instanceof InterruptionMetadata interruptionMetadata) {
-                // 处理人工介入中断
-                testHitldata = interruptionMetadata;
-                return Flux.just("[系统] 发生了工具调用中断，请等待人工审核结果...");
-            } else if (out instanceof StreamingOutput<?> streamingOutput) {
-                // 处理流式输出
-                String chunk = streamingOutput.chunk();
-                if (chunk != null && !chunk.isEmpty()) {
-//                    SystemPrinter.println("流式chunk: " + chunk);
-                    return Flux.just(chunk);
-                }
-            }
-            return Flux.empty();
-        });
-    }
+
 
     @GetMapping(value = "/approve", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public void approve() throws GraphRunnerException {
@@ -216,6 +189,81 @@ public class TestController {
 
     }
 
+
+    @GetMapping("/memory")
+    public void testMemory() throws GraphRunnerException {
+
+        FileSystemStore userInfoStore = new FileSystemStore(userConfigProperties.getUserDir());
+        // fileSystemStore 中
+        // namespace = 文件夹  key = 文件名 value = 文件内容
+        // namespace = List  => 多级文件夹路径
+
+
+
+// 创建获取用户信息的工具
+//        BiFunction<GetMemoryRequest, ToolContext, MemoryResponse> getUserInfoFunction =
+//                (request, context) -> {
+//                    RunnableConfig runnableConfig = (RunnableConfig) context.getContext().get("_AGENT_CONFIG_");
+//                    Store store = runnableConfig.store();
+//                    Optional<StoreItem> itemOpt = store.getItem(request.namespace(), request.key());
+//                    if (itemOpt.isPresent()) {
+//                        Map<String, Object> value = itemOpt.get().getValue();
+//                        return new MemoryResponse("找到用户信息", value);
+//                    }
+//                    return new MemoryResponse("未找到用户", Map.of());
+//                };
+//
+//        ToolCallback getUserInfoTool = FunctionToolCallback.builder("getUserInfo", getUserInfoFunction)
+//                .description("查询用户信息")
+//                .inputType(GetMemoryRequest.class)
+//                .build();
+
+// 创建Agent
+        ReactAgent agent = ReactAgent.builder()
+                .name("memory_agent")
+                .model(chatModel)
+                .tools(ToolUtils.buildToolCallback(new UserGetInfoTool()))
+                .saver(new MemorySaver())
+                .build();
+
+// 向存储中写入示例数据
+        Map<String, Object> userData = new HashMap<>();
+        userData.put("userName", "张三");
+        userData.put("language", "中文");
+
+        StoreItem userItem = StoreItem.of(List.of("info"), "user_123", userData);
+        userInfoStore.putItem(userItem);
+
+// 运行Agent
+        RunnableConfig config = RunnableConfig.builder()
+                .threadId("session_001")
+                .addMetadata("user_id", "user_123")
+                .store(userInfoStore)
+                .build();
+
+        Optional<OverAllState> invoke = agent.invoke("查询用户信息，namespace=['info'], key='user_123'", config);
+
+        invoke.ifPresent(state -> SystemPrinter.println("Agent 执行完成，最终状态: " + state));
+    }
+
+
+    private Flux<String>  convertToStringFlux(Flux<NodeOutput> outputFlux){
+        return outputFlux.flatMap(out -> {
+            if (out instanceof InterruptionMetadata interruptionMetadata) {
+                // 处理人工介入中断
+                testHitldata = interruptionMetadata;
+                return Flux.just("[系统] 发生了工具调用中断，请等待人工审核结果...");
+            } else if (out instanceof StreamingOutput<?> streamingOutput) {
+                // 处理流式输出
+                String chunk = streamingOutput.chunk();
+                if (chunk != null && !chunk.isEmpty()) {
+//                    SystemPrinter.println("流式chunk: " + chunk);
+                    return Flux.just(chunk);
+                }
+            }
+            return Flux.empty();
+        });
+    }
 
     private Optional<NodeOutput> handleHITL(String threadId, InterruptionMetadata interruptionMetadata) throws GraphRunnerException {
 

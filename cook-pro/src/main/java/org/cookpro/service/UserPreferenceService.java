@@ -56,8 +56,8 @@ public class UserPreferenceService extends ServiceImpl<UserPreferenceMapper, Use
         String cacheKey = getCacheKey(userId);
 
         UserPreferenceDTO dto = redisService.getWithCacheLoader(cacheKey, UserPreferenceDTO.class,
-                UserPreferenceMapper::getOneByUserId,
-                USER_PREFERENCE_FLAG_TTL, TimeUnit.HOUR
+                () -> userPreferenceMapper.getOneByUserId(userId),
+                USER_PREFERENCE_FLAG_TTL, TimeUnit.HOURS
         );
 
         return toVo(dto);
@@ -111,7 +111,7 @@ public class UserPreferenceService extends ServiceImpl<UserPreferenceMapper, Use
 
             save(preference);
 
-            redisService.cacheObject(getCacheKey(userId), responseDTO, USER_PREFERENCE_FLAG_TTL, TimeUnit.HOUR);
+            redisService.cacheObject(getCacheKey(userId), responseDTO, USER_PREFERENCE_FLAG_TTL, TimeUnit.HOURS);
 
             return true;
         } catch (Exception e) {

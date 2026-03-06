@@ -15,9 +15,6 @@ ext {
     alibabaVersion = '1.1.0.0'
     springBootVersion = '3.4.5'
 
-
-
-
     druidVersion = '1.2.23'
     mybatisPlusVersion = '3.5.6'
     mysqlVersion = '8.0.31'
@@ -51,10 +48,26 @@ subprojects {
 
     repositories {
         mavenCentral()
-
     }
+    // 只对已应用 Java 插件的子模块配置依赖
+    plugins.withType(JavaPlugin) {
+        dependencies {
+            implementation platform("io.grpc:grpc-bom:${grpcVersion}")
+
+            // lombok + Swagger
+            compileOnly "org.projectlombok:lombok:${lombokVersion}"
+            annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+            implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springDocVersion}"
+
+            // 其他工具
+            implementation "cn.hutool:hutool-all:${hutoolVersion}"
+            implementation "com.squareup.okhttp3:okhttp:4.12.0"
 
 
+            testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+            testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+        }
+    }
 }
 compileJava {
         options.encoding = 'UTF-8'

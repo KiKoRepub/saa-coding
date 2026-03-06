@@ -41,10 +41,14 @@ CREATE TABLE `cook_record` (
   `user_id`         BIGINT       DEFAULT NULL COMMENT '用户ID',
   `recipe_id`       VARCHAR(255) DEFAULT NULL COMMENT '菜谱ID',
   `product_url`     VARCHAR(512) DEFAULT NULL COMMENT '成品图片URL',
-  `remark`          VARCHAR(512) DEFAULT NULL COMMENT '备注',
+  `description`     VARCHAR(255) DEFAULT NULL COMMENT '备注',
   `deleted`         TINYINT      NOT NULL DEFAULT '0' COMMENT '逻辑删除字段，0表示未删除，1表示已删除',
+  `create_user`     VARCHAR(255) DEFAULT NULL COMMENT '创建用户',
   `create_time`     DATETIME     DEFAULT NULL COMMENT '创建时间',
   `update_time`     DATETIME     DEFAULT NULL COMMENT '更新时间',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  -- 高频查询索引，提升按用户/菜谱检索烹饪记录的效率
+  INDEX idx_cook_record_user_id (`user_id`),
+  INDEX idx_cook_record_recipe_id (`recipe_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='烹饪记录表';
  */

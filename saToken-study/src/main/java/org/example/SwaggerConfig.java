@@ -1,4 +1,4 @@
-package org.cookpro.config;
+package org.example;
 
 
 import io.swagger.v3.oas.models.OpenAPI;
@@ -13,7 +13,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 /**
- * Swagger UI: http://localhost:/swagger-ui/index.html
+ * Swagger UI: http://localhost:9000/swagger-ui/index.html
  * OpenAPI JSON: http://localhost:/v3/api-docs
  *
  * HTTP 转换成 MCP 服务
@@ -22,10 +22,10 @@ import java.io.IOException;
 @Configuration
 public class SwaggerConfig {
     @Bean
-    public OpenAPI cookProOpenAPI() {
+    public OpenAPI saTokenOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Cook Project API")
+                        .title("sa-Token Study API")
                         .description("OpenAPI documentation powered by springdoc-openapi")
                         .version("v1"));
     }
@@ -38,7 +38,7 @@ public class SwaggerConfig {
         String filePath = basePath + "/openAI_doc.json";
 
         OkHttpClient client = new OkHttpClient();
-        String url = "http://localhost:13002/v3/api-docs";
+        String url = "http://localhost:9000/v3/api-docs";
 
         Request request = new Request.Builder().url(url).build();
 

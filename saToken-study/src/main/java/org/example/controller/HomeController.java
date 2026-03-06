@@ -1,4 +1,4 @@
-package org.example;
+package org.example.controller;
 
 import cn.dev33.satoken.context.SaHolder;
 import cn.dev33.satoken.stp.StpUtil;

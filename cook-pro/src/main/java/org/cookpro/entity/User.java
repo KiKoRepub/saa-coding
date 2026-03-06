@@ -30,11 +30,12 @@ public class User extends BaseEntity {
 }
 /*
 CREATE TABLE `user` (
-  `id`              BIGINT       NOT NULL COMMENT '主键ID',
+  `id`              BIGINT       NOT NULL COMMENT '用户ID',
   `username`        VARCHAR(255) DEFAULT NULL COMMENT '用户名',
   `password`        VARCHAR(255) DEFAULT NULL COMMENT '密码',
   `role`            VARCHAR(255) DEFAULT NULL COMMENT '用户角色',
   `deleted`         TINYINT      NOT NULL DEFAULT '0' COMMENT '逻辑删除字段，0表示未删除，1表示已删除',
+  `create_user`     VARCHAR(255) DEFAULT NULL COMMENT '创建用户',
   `create_time`     DATETIME     DEFAULT NULL COMMENT '创建时间',
   `update_time`     DATETIME     DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`)

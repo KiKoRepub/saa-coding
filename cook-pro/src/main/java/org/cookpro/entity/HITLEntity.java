@@ -11,7 +11,7 @@ import lombok.EqualsAndHashCode;
 import org.cookpro.handler.InterruptDataSerialHandler;
 
 @Data
-@TableName("interrupt_review")
+@TableName("hitl")
 @EqualsAndHashCode(callSuper = true)
 public class HITLEntity extends BaseEntity{
     @TableId(type = IdType.ASSIGN_ID)
@@ -51,18 +51,20 @@ CREATE TABLE `interrupt_review` (
   `id`              BIGINT       NOT NULL COMMENT '主键ID',
   `review_id`       BIGINT       DEFAULT NULL COMMENT '审核人ID',
   `publisher_id`    BIGINT       DEFAULT NULL COMMENT '发布人ID',
-  `interrupt_id`    VARCHAR(64)  DEFAULT NULL COMMENT '中断ID(线程id)',
-  `interrupt_data`  LONGTEXT     DEFAULT NULL COMMENT '中断数据',
-  `reason`          VARCHAR(512) DEFAULT NULL COMMENT '审核原因',
-  `remark`          VARCHAR(512) DEFAULT NULL COMMENT '备注',
-  `status`          VARCHAR(32)  DEFAULT NULL COMMENT '审核状态',
+  `interrupt_id`    VARCHAR(255) DEFAULT NULL COMMENT '中断ID(线程id)',
+  `interrupt_data`  LONGTEXT     DEFAULT NULL COMMENT '中断数据（序列化存储）',
+  `reason`          TEXT         DEFAULT NULL COMMENT '审核原因',
+  `remark`          TEXT         DEFAULT NULL COMMENT '备注',
+  `status`          VARCHAR(255) DEFAULT NULL COMMENT '审核状态',
   `deleted`         TINYINT      NOT NULL DEFAULT '0' COMMENT '逻辑删除字段，0表示未删除，1表示已删除',
+  `create_user`     VARCHAR(255) DEFAULT NULL COMMENT '创建用户',
   `create_time`     DATETIME     DEFAULT NULL COMMENT '创建时间',
   `update_time`     DATETIME     DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`),
-  KEY `idx_review_id` (`review_id`) USING BTREE COMMENT '审核人ID索引',
-  KEY `idx_publisher_id` (`publisher_id`) USING BTREE COMMENT '发布人ID索引',
-  KEY `idx_interrupt_id` (`interrupt_id`) USING BTREE COMMENT '中断ID索引',
-  KEY `idx_status` (`status`) USING BTREE COMMENT '审核状态索引'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='中断审核记录表';
+  -- 高频查询索引，提升审核人/发布人/状态筛选效率
+  INDEX idx_interrupt_review_review_id (`review_id`),
+  INDEX idx_interrupt_review_publisher_id (`publisher_id`),
+  INDEX idx_interrupt_review_status (`status`),
+  INDEX idx_interrupt_review_interrupt_id (`interrupt_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='HITL中断审核表';
  */

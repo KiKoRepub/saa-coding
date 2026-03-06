@@ -36,7 +36,7 @@ public class RedisService {
 
     public String getString(String cacheKey) {
         Object value = redisTemplate.opsForValue().get(cacheKey);
-        return value == null ? null : value.toString();
+        return value.toString();
     }
 
     public boolean exists(String cacheKey) {
@@ -179,7 +179,7 @@ public class RedisService {
             cacheObject(key, value, ttl, timeUnit);
         } else {
             // 防止缓存穿透
-            cacheOneString(key, "", 1, TimeUnit.MINUTES);
+            cacheOneString(key, "", 1L, TimeUnit.MINUTES);
         }
 
         return value;

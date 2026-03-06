@@ -11,3 +11,4 @@ spring:
       - classpath:config/redis.yml
       - classpath:config/tool-env.yml
       - classpath:config/sa-token.yml
+      - classpath:config/user-config.yml

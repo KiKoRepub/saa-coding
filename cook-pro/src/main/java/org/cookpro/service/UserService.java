@@ -1,11 +1,14 @@
 package org.cookpro.service;
-
+import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.apache.commons.collections4.BagUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.cookpro.dto.UserLoginDTO;
 import org.cookpro.entity.User;
 import org.cookpro.mapper.UserMapper;
+import org.cookpro.vo.UserInfoVo;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -14,14 +17,12 @@ public class UserService extends ServiceImpl<UserMapper, User> {
 
 
     public Long getCurrentUserId() {
-        // 这里应该从安全上下文或会话中获取当前用户的ID
-        // 这是一个示例，实际实现可能需要根据你的认证机制进行调整
-        return 1L; // 假设当前用户ID为1
+         return StpUtil.getLoginIdAsLong();
     }
 
 
     public Long login(UserLoginDTO dto) {
-
+        // 接入 sa-token 进行管理
         String userName = dto.getUserName();
         String password = dto.getPassword();
 
@@ -32,13 +33,15 @@ public class UserService extends ServiceImpl<UserMapper, User> {
             User user = this.getOne(queryWrapper);
 
             if (user != null) {
+                StpUtil.login(user.getId());
+
                 return user.getId();
             }else return null;
 
     }
 
 
-    public Long register(UserLoginDTO dto) {
+    public String register(UserLoginDTO dto) {
         String userName = dto.getUserName();
         String password = dto.getPassword();
 
@@ -56,10 +59,23 @@ public class UserService extends ServiceImpl<UserMapper, User> {
 
             this.save(user);
 
-            return user.getId(); // 返回新注册用户的ID
+            return user.getId().toString(); // 返回新注册用户的ID
         } else {
             return null; // 用户名或密码为空，注册失败
         }
 
+    }
+
+    public UserInfoVo getUserInfo() {
+        Long currentUserId = getCurrentUserId();
+
+        User user = getById(currentUserId);
+
+        UserInfoVo userInfoVo = new UserInfoVo();
+
+        BeanUtil.copyProperties(user, userInfoVo);
+
+        // TODO 补充用户偏好信息
+        return userInfoVo;
     }
 }
