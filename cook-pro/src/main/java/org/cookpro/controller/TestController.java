@@ -238,10 +238,11 @@ public class TestController {
         RunnableConfig config = RunnableConfig.builder()
                 .threadId("session_001")
                 .addMetadata("user_id", "user_123")
+                .addMetadata("namespace", List.of("info"))
                 .store(userInfoStore)
                 .build();
-
-        Optional<OverAllState> invoke = agent.invoke("查询用户信息，namespace=['info'], key='user_123'", config);
+        String msgPrefix = "所有 在记忆操作中需要的数据都在当前运行配置 (RunnableConfig) 对象中，例如 namespace,user_id 帮我完成以下的任务:";
+        Optional<OverAllState> invoke = agent.invoke(msgPrefix + "查询用户信息，namespace=['info'], key='user_123'", config);
 
         invoke.ifPresent(state -> SystemPrinter.println("Agent 执行完成，最终状态: " + state));
     }

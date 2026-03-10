@@ -14,7 +14,7 @@ import java.util.function.BiFunction;
  * @param <R> 输出结果类型
  */
 public  interface BaseAlibabaToolInter<T,R> extends BiFunction<T, ToolContext,R> {
-
+  String AGENT_CONFIG = "_AGENT_CONFIG_";
   String getToolName();
   String getToolDescription();
 

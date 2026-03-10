@@ -5,19 +5,20 @@ import com.alibaba.cloud.ai.graph.store.Store;
 import com.alibaba.cloud.ai.graph.store.StoreItem;
 import org.cookpro.dto.agent.AgentStoreRequest;
 import org.cookpro.dto.agent.AgentUserInfoDTO;
+import org.cookpro.dto.agent.StoreUserRequest;
 import org.springframework.ai.chat.model.ToolContext;
 
 import java.util.Map;
 import java.util.Optional;
 
-public class UserGetInfoTool implements BaseAlibabaToolInter<AgentStoreRequest, AgentUserInfoDTO> {
+public class UserGetInfoTool implements BaseAlibabaToolInter<StoreUserRequest, AgentUserInfoDTO> {
 
     @Override
-    public AgentUserInfoDTO apply(AgentStoreRequest request, ToolContext context) {
+    public AgentUserInfoDTO apply(StoreUserRequest request, ToolContext context) {
 
-        RunnableConfig runnableConfig = (RunnableConfig) context.getContext().get("_AGENT_CONFIG_");
+        RunnableConfig runnableConfig = (RunnableConfig) context.getContext().get("");
         Store store = runnableConfig.store();
-        Optional<StoreItem> itemOpt = store.getItem(request.namespace(), request.key());
+        Optional<StoreItem> itemOpt = store.getItem(request.getNamespace(), request.getKey());
         if (itemOpt.isPresent()) {
             Map<String, Object> value = itemOpt.get().getValue();
 
@@ -39,7 +40,7 @@ public class UserGetInfoTool implements BaseAlibabaToolInter<AgentStoreRequest, 
     }
 
     @Override
-    public Class<AgentStoreRequest> getInputType() {
-        return AgentStoreRequest.class;
+    public Class<StoreUserRequest> getInputType() {
+        return StoreUserRequest.class;
     }
 }

@@ -42,10 +42,13 @@ dependencies {
 
     // sa-token 依赖 (User 登录鉴权)
     implementation "cn.dev33:sa-token-spring-boot3-starter:${saTokenVersion}"// 权限认证
-//    implementation "cn.dev33:sa-token-sso:${saTokenVersion}"//整合SSO - 插件
-//    implementation "cn.dev33:sa-token-redis-template:${saTokenVersion}"// Sa-Token 整合 RedisTemplate
-//    implementation "org.apache.commons:commons-pool2"
-////    implementation "cn.dev33:sa-token-alone-redis:${saTokenVersion}"// Sa-Token插件：权限缓存与业务缓存分离
+
+    // MCP 依赖
+    implementation "org.springframework.ai:spring-ai-starter-mcp-server-webflux:${springAiVersion}"
+
+
+
+
 //
 
 
