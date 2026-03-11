@@ -12,3 +12,4 @@ spring:
       - classpath:config/tool-env.yml
       - classpath:config/sa-token.yml
       - classpath:config/user-config.yml
+      - classpath:config/mcp.yaml

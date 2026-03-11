@@ -11,7 +11,7 @@ import com.alibaba.cloud.ai.graph.checkpoint.savers.MemorySaver;
 import com.alibaba.cloud.ai.graph.exception.GraphRunnerException;
 
 import com.alibaba.cloud.ai.graph.store.StoreItem;
-import com.alibaba.cloud.ai.graph.store.stores.FileSystemStore;
+import com.alibaba.cloud.ai.graph.store.stores.DatabaseStore;
 import com.alibaba.cloud.ai.graph.streaming.StreamingOutput;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
@@ -34,6 +34,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
+import javax.sql.DataSource;
 import java.nio.charset.Charset;
 import java.util.*;
 
@@ -52,6 +53,9 @@ public class TestController {
 
     @Resource
     MemoryCacheService memoryCacheService;
+
+    @Resource
+    DataSource dataSource;
 
     @Resource
     UserConfigProperties userConfigProperties;
@@ -193,10 +197,10 @@ public class TestController {
     @GetMapping("/memory")
     public void testMemory() throws GraphRunnerException {
 
-        FileSystemStore userInfoStore = new FileSystemStore(userConfigProperties.getUserDir());
-        // fileSystemStore 中
-        // namespace = 文件夹  key = 文件名 value = 文件内容
-        // namespace = List  => 多级文件夹路径
+        DatabaseStore userInfoStore = new DatabaseStore(dataSource);
+        // DatabaseStore 中
+        // namespace = 命名空间分组  key = 键名 value = 数据
+        // namespace = List  => 多级路径
 
 
 
