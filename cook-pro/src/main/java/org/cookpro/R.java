@@ -3,6 +3,7 @@ package org.cookpro;
 import lombok.Data;
 
 
+@Data
 public class R <T> {
 
     private final T data;

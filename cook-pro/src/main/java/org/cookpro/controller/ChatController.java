@@ -29,9 +29,10 @@ import org.cookpro.utils.SystemPrinter;
 import org.cookpro.utils.ToolUtils;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -65,7 +66,7 @@ public class ChatController {
     private final ChatModel chatModel; // 构造函数中初始化
     private static final AgentBackground BACKGROUND = AgentBackground.COOKING_ASSISTANT;
 
-    @GetMapping("/chat")
+    @GetMapping(value = "/chat",produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "与烹饪助手聊天", description = "向烹饪助手发送消息，获取回复")
     public R<String> chat(@RequestParam("message") String message,
                           @RequestParam(value = "userId", required = false, defaultValue = "0") Long userId) {
@@ -164,9 +165,9 @@ public class ChatController {
         }
     }
 
-    @PostMapping("/stream/chatMore")
     @Operation(summary = "与烹饪助手进行功能更多的聊天（流式）", description = "向烹饪助手发送消息列表，获取回复（流式）")
-    public Flux<String> streamChat(@RequestBody UserChattingDTO dto) throws GraphRunnerException, IOException, InterruptedException {
+    @PostMapping(value = "/stream/chatMore", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamChat(@RequestBody UserChattingDTO dto) throws GraphRunnerException, IOException, InterruptedException {
         String message = dto.getMessage();
 
 
@@ -186,7 +187,7 @@ public class ChatController {
         ReactAgent agent = ReactAgent.builder()
                 .name(cookingAssistant.name())
                 .model(chatModel)
-                .outputType(String.class)
+//                .outputType(String.class)
                 .hooks(hookList)
                 .systemPrompt(cookingAssistant.systemPrompt)
                 .tools(toolService.selectTools(toolDtos))
@@ -201,7 +202,7 @@ public class ChatController {
         RunnableConfig config = RunnableConfig.builder()
                 .threadId(agentThreadId)
                 .build();
-        Flux<NodeOutput> baseFluxResult = agent.stream(message, config);
+        reactor.core.publisher.Flux<NodeOutput> baseFluxResult = agent.stream(message, config);
 
 
         // 创建 并保存 sink
@@ -230,12 +231,30 @@ public class ChatController {
                     SystemPrinter.println("流式chunk: " + chunk);
 
                     sink.tryEmitNext(chunk);
+                    sink.tryEmitNext("\n");
                 }
             }
 
+        }, err -> {
+            sink.tryEmitNext("[系统] 流式响应异常：" + err.getMessage());
+            sink.tryEmitNext("\n");
+            sink.tryEmitComplete();
+        }, sink::tryEmitComplete);
+
+        SseEmitter emitter = new SseEmitter(0L);
+        sink.asFlux().subscribe(data -> {
+            try {
+                emitter.send(SseEmitter.event().data(data));
+            } catch (IOException e) {
+                sink.tryEmitComplete();
+                emitter.completeWithError(e);
+            }
+        }, emitter::completeWithError, () -> {
+            memoryCacheService.removeInterruptSink(agentThreadId);
+            emitter.complete();
         });
 
-        return sink.asFlux();
+        return emitter;
     }
 
 

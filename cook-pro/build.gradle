@@ -35,7 +35,6 @@ dependencies {
     implementation "org.springframework.ai:spring-ai-advisors-vector-store:${springAiVersion}"
     implementation "org.springframework.ai:spring-ai-starter-vector-store-milvus:${springAiVersion}"
     implementation "org.springframework.ai:spring-ai-starter-model-ollama:${springAiVersion}"
-    implementation ""
 
     // minio 依赖
     implementation "io.minio:minio:${minioVersion}"
@@ -48,7 +47,8 @@ dependencies {
 
 
 
-
+    // MongoDB 依赖
+//    implementation "org.springframework.boot:spring-boot-starter-data-mongodb:${springBootVersion}"
 //
 
 

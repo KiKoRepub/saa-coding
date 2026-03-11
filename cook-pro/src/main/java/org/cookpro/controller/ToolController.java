@@ -33,4 +33,9 @@ public class ToolController {
 
 
 
+    @PostMapping("/add/auto")
+    @Operation(summary = "自动添加工具(需要鉴权)", description = "根据系统中已有的工具自动添加新的工具")
+    public R<String> autoAddTool() {
+        return R.ok(toolService.autoAddTool());
+    }
 }

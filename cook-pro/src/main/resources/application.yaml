@@ -13,3 +13,4 @@ spring:
       - classpath:config/sa-token.yml
       - classpath:config/user-config.yml
       - classpath:config/mcp.yaml
+      - classpath:config/mongodb.yml
