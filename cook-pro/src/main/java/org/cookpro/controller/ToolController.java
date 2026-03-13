@@ -21,6 +21,7 @@ public class ToolController {
 
 
     @PostMapping("/pageList")
+    @Operation(summary = "工具分页列表", description = "根据分页参数和筛选条件获取工具的分页列表")
     public R<Page<ToolPageListVo>> getTools(@RequestBody ToolPageDTO dto){
         return  R.ok(toolService.getToolPageList(dto));
     }

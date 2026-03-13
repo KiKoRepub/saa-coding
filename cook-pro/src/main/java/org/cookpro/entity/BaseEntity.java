@@ -1,5 +1,6 @@
 package org.cookpro.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -15,11 +16,11 @@ public class BaseEntity {
     @Schema(description = "创建用户", example = "admin")
     private String createUser;
 
-    @TableField("create_time")
+    @TableField(value = "create_time",fill = FieldFill.INSERT)
     @Schema(description = "创建时间", example = "2023-10-01 12:00:00")
     private LocalDateTime createTime;
 
-    @TableField("update_time")
+    @TableField(value = "update_time",fill = FieldFill.INSERT_UPDATE)
     @Schema(description = "更新时间", example = "2023-10-01 12:00:00")
     private LocalDateTime updateTime;
 

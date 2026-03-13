@@ -6,6 +6,7 @@ import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONUtil;
 import cn.hutool.json.JSONObject;
 
+import org.cookpro.anotations.ProjectTool;
 import org.cookpro.dto.BochaSearchResponse;
 import org.cookpro.dto.WebSearchResultDTO;
 import org.springframework.ai.tool.annotation.Tool;
@@ -17,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-
+@ProjectTool
 public class WebSearchTool {
 
     // 博查AI API 密钥和搜索 URL

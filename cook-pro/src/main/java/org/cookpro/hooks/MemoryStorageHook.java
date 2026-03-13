@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollectionUtil;
 import com.alibaba.cloud.ai.graph.OverAllState;
 import com.alibaba.cloud.ai.graph.RunnableConfig;
 import com.alibaba.cloud.ai.graph.agent.hook.HookPosition;
+import com.alibaba.cloud.ai.graph.agent.hook.HookPositions;
 import com.alibaba.cloud.ai.graph.agent.hook.ModelHook;
 import com.alibaba.cloud.ai.graph.store.Store;
 import com.alibaba.cloud.ai.graph.store.StoreItem;
@@ -20,16 +21,13 @@ import java.util.concurrent.CompletableFuture;
  */
 @Slf4j
 @Component
+@HookPositions({HookPosition.BEFORE_MODEL, HookPosition.AFTER_MODEL})
 public class MemoryStorageHook extends ModelHook {  
     @Override
     public String getName() {
-        return "memory_storage_hook";
+        return getClass().getName();
     }
 
-    @Override
-    public HookPosition[] getHookPositions() {
-        return new HookPosition[]{HookPosition.BEFORE_MODEL, HookPosition.AFTER_MODEL};
-    }
 
     @Override
     public CompletableFuture<Map<String, Object>> beforeModel(OverAllState state, RunnableConfig config) {
@@ -110,7 +108,7 @@ public class MemoryStorageHook extends ModelHook {
 
     @Override
     public CompletableFuture<Map<String, Object>> afterModel(OverAllState state, RunnableConfig config) {
-        // 可以在这里实现对话后的记忆保存逻辑
+        // TODO 可以在这里实现对话后的记忆保存逻辑
         log.info("Start saving user conversations to memory storage...");
 
 

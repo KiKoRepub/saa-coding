@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.cookpro.anotations.ProjectTool;
 import org.cookpro.dto.ToolAutoPersistDTO;
 import org.cookpro.dto.ToolChatDTO;
 import org.cookpro.dto.ToolPageDTO;
@@ -17,7 +18,10 @@ import org.cookpro.config.factory.ToolFactory;
 import org.cookpro.vo.ToolPageListVo;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
+import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +29,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 @Slf4j
 @Service
@@ -85,7 +90,7 @@ public class ToolService extends ServiceImpl<ToolMapper, ToolEntity> {
     private static QueryWrapper<ToolEntity> getPageQueryWrapper(ToolPageDTO dto) {
         QueryWrapper<ToolEntity> wrapper =  new QueryWrapper<ToolEntity>()
                 .eq("deleted", 0)
-                .orderByDesc("created_time");
+                .orderByDesc("create_time");
 
 
         if (dto.getStatus() != null){
@@ -132,31 +137,44 @@ public class ToolService extends ServiceImpl<ToolMapper, ToolEntity> {
     }
 
     private List<ToolAutoPersistDTO> getProjectTools() {
-        Map<String, Object> beans = applicationContext.getBeansWithAnnotation(Component.class);
 
-        List<ToolAutoPersistDTO> list = new ArrayList<>();
+            String basePath = "org.cookpro.tools";
+            List<ToolAutoPersistDTO> list = new ArrayList<>();
 
-        for (Object bean : beans.values()) {
+            // 扫描 class
+            ClassPathScanningCandidateComponentProvider scanner =
+                    new ClassPathScanningCandidateComponentProvider(false);
 
-            Class<?> clazz = bean.getClass();
+            scanner.addIncludeFilter(new AnnotationTypeFilter(ProjectTool.class));
 
-            for (Method method : clazz.getDeclaredMethods()) {
+            Set<BeanDefinition> beanDefinitions = scanner.findCandidateComponents(basePath);
 
-                Tool tool = method.getAnnotation(Tool.class);
+            for (BeanDefinition beanDefinition : beanDefinitions) {
+                try {
 
-                if (tool != null) {
+                    Class<?> clazz = Class.forName(beanDefinition.getBeanClassName());
 
-                    ToolAutoPersistDTO dto = new ToolAutoPersistDTO();
+                    for (Method method : clazz.getDeclaredMethods()) {
 
-                    dto.setSource(clazz.getName());
-                    dto.setToolName(clazz.getSimpleName() + "." + method.getName());
-                    dto.setDescription(tool.description());
+                        Tool tool = method.getAnnotation(Tool.class);
 
-                    list.add(dto);
+                        if (tool != null) {
+
+                            ToolAutoPersistDTO dto = new ToolAutoPersistDTO();
+
+                            dto.setSource(clazz.getName());
+                            dto.setToolName(method.getName());
+                            dto.setDescription(tool.description());
+
+                            list.add(dto);
+                        }
+                    }
+
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
                 }
             }
-        }
 
-        return list;
-    }
+            return list;
+        }
 }

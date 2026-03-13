@@ -11,7 +11,7 @@ import java.util.List;
 @Data
 public class ToolAutoPersistDTO {
 
-    @Schema
+    @Schema(description = "工具来源，绑定 ToolSourceEnum")
     private String source;
 
 

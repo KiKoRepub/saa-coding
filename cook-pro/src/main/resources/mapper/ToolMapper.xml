@@ -2,14 +2,14 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.cookpro.mapper.ToolMapper">
     <insert id="batchSaveOrUpdate">
-            INSERT INTO tool (tool_name, description, source,audit_remark, auditor_id,created_user)
+            INSERT INTO tool (id,tool_name, `description`, `source`,audit_remark, auditor_id,create_user)
             VALUES
             <foreach collection="list" item="item" separator=",">
-                (#{item.toolName}, #{item.description}, #{item.source},#{item.auditRemark}, #{item.auditorId},#{item.createdUser})
+                (#{item.id}, #{item.toolName}, #{item.description}, #{item.source},#{item.auditRemark}, #{item.auditorId},#{item.createUser})
             </foreach>
             ON DUPLICATE KEY UPDATE
-            description = VALUES(description),
-            source = VALUES(source)
+            `description` = VALUES(`description`),
+            `source` = VALUES(`source`)
     </insert>
     <select id="selectChatDTOByIds" resultType="org.cookpro.dto.ToolChatDTO">
         SELECT tool_name AS toolName, source, audit_remark AS auditRemark, auditor_id AS auditorId

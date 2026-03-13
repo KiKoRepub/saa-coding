@@ -14,8 +14,8 @@ public class ToolPageListVo {
     @Schema(description = "工具描述")
     private String description;
 
-    @Schema(description = "是不是项目定义的工具")
-    private int source;
+    @Schema(description = "工具来源")
+    private String source;
 
     @Schema(description = "创建用户")
     private String createUser;

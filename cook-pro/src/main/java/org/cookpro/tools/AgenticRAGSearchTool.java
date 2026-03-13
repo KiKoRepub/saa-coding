@@ -2,6 +2,7 @@ package org.cookpro.tools;
 
 import cn.hutool.json.JSONUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.cookpro.anotations.ProjectTool;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
@@ -11,6 +12,7 @@ import org.springframework.boot.json.JacksonJsonParser;
 
 import java.util.List;
 
+@ProjectTool
 public class AgenticRAGSearchTool {
 
 

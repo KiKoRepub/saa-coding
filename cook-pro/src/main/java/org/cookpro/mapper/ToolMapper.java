@@ -18,6 +18,6 @@ public interface ToolMapper extends BaseMapper<ToolEntity> {
     ToolChatDTO selectChatDTOByName(String toolName);
 
 
-    int batchSaveOrUpdate(List<ToolEntity> toolEntityList);
+    int batchSaveOrUpdate(@Param("list") List<ToolEntity> toolEntityList);
 
 }
