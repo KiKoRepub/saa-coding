@@ -15,25 +15,28 @@ public class ToolEnvProperties {
 
 
     public String getGoogleWebSearchApiKey() {
-        return this.webSearch.getGoogle().getApiKey();
+        return this.webSearch.getGoogle().apiKey;
     }
     public String getBochaWebSearchApiKey() {
-        return this.webSearch.getBocha().getApiKey();
+        return this.webSearch.getBocha().apiKey;
     }
 
+    public String getTavilyWebSearchApiKey() {
+        return this.webSearch.getTavily().apiKey;
+    }
     @Data
     public static class WebSearch {
         private Google google;
         private Bocha bocha;
+        private Tavily tavily;
 
-        @Data
-        public static class Google {
-            private String apiKey;
+
+        public record Google(String apiKey) {
         }
 
-        @Data
-        public static class Bocha {
-            private String apiKey;
+        public record Bocha(String apiKey) {
+        }
+        public record Tavily(String apiKey) {
         }
     }
 }

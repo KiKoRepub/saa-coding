@@ -20,7 +20,8 @@ import org.springframework.context.annotation.Primary;
 @Configuration
 public class AgentModelConfig {
 
-
+    @Resource
+    WebSearchTool webSearchTool;
     @Bean
     @Primary
     public DashScopeChatModel dashScopeChatModel(DashScopeConnectionProperties connectionProperties){
@@ -59,7 +60,7 @@ public class AgentModelConfig {
 
 
         ToolCallback[] webSearchToolCallbacks = ToolCallbacks.from(
-                new WebSearchTool(toolEnvProperties.getGoogleWebSearchApiKey())
+               webSearchTool
         );
 
 

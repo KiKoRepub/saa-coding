@@ -4,3 +4,5 @@ tool-env:
       api-key: ${GOOGLE_WEB_SEARCH_API_KEY}
     bocha:
       api-key: ${BOCHA_WEB_SEARCH_API_KEY}
+    tavily:
+      api-key: ${TAVILY_WEB_SEARCH_API_KEY}

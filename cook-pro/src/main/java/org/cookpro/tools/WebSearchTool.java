@@ -7,11 +7,15 @@ import cn.hutool.json.JSONUtil;
 import cn.hutool.json.JSONObject;
 
 import org.cookpro.anotations.ProjectTool;
+import org.cookpro.config.factory.WebClientFactory;
+import org.cookpro.config.properties.ToolEnvProperties;
 import org.cookpro.dto.BochaSearchResponse;
 import org.cookpro.dto.WebSearchResultDTO;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
+import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
 import java.util.List;
@@ -20,23 +24,17 @@ import java.util.stream.Collectors;
 
 @ProjectTool
 public class WebSearchTool {
+   private final String googleApiKey;
+   private final WebClientFactory webClientFactory;
 
-    // 博查AI API 密钥和搜索 URL
-    private final String bochaApiKey = "";
-    private static final String BOCHA_SEARCH_URL = "https://api.bocha.cn/v1/web-search";
-
-    // Google Search API 的搜索接口地址
-    private final String googleApiKey;
-    private static final String GOOGLE_SEARCH_API_URL = "https://www.searchapi.io/api/v1/search";
-
-    public WebSearchTool(String googleApiKey) {
-        this.googleApiKey = googleApiKey;
-
+    public WebSearchTool(WebClientFactory factory) {
+        this.webClientFactory = factory;
+        this.googleApiKey = factory.googleApiKey;
     }
 
     @Tool(name = "boCha_web_search",
             description = "[deprecated] A tool for searching the web for relevant information based on a query.")
-    public WebSearchResultDTO boChaSearchWeb(@ToolParam(description = "the question which need to query") String query,
+    public WebSearchResultDTO boChaWebSearch(@ToolParam(description = "the question which need to query") String query,
                                              @ToolParam(description = "the number of search results to return,default 5",required = false) int count){
 
                 if (count == 0) {
@@ -45,11 +43,7 @@ public class WebSearchTool {
                 var requestBody = new SearchRequest(query, "noLimit", true, count);
 
                 try {
-                    WebClient webClient = WebClient.builder()
-                            .baseUrl(BOCHA_SEARCH_URL)
-                            .defaultHeader("Authorization", "Bearer " + bochaApiKey)
-                            .defaultHeader("Content-Type", "application/json")
-                            .build();
+                    WebClient webClient = webClientFactory.getInstance("bocha");
 
 
                     BochaSearchResponse response = webClient.post()
@@ -85,11 +79,8 @@ public class WebSearchTool {
                 }
     }
 
-
-
-
     @Tool(name = "google_web_search",description = "Search for information from Search Engine")
-    public WebSearchResultDTO googleSearchWeb(
+    public WebSearchResultDTO googleWebSearch(
             @ToolParam(description = "Search query keyword") String query,
             @ToolParam(description = "the number of search results to return,default 5",required = false) int count)                                                                                                                                                                                                                                                                                       {
         if (count == 0) {
@@ -123,29 +114,89 @@ public class WebSearchTool {
 //        return executeGoogleSearch(query, count);
     }
 
+    @Tool(name = "tavily_web_search", description = "Search for information from Tavily Search Engine")
+    public WebSearchResultDTO tavilyWebSearch(String query, int count) {
+            // 1. 初始化 WebClient (建议将 webClient 定义为 Bean 注入)
+            WebClient webClient = webClientFactory.getInstance("tavily");
+
+            // 2. 构建请求体
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("query", query);
+            requestBody.put("search_depth", "smart"); // 可选：basic 或 smart
+            requestBody.put("max_results", count);
+
+            // 3. 发起请求并解析结果
+            return webClient.post()
+                    .uri("/search")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(requestBody)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .map(response -> {
+                        // 在这里解析 Tavily 的返回结果并封装进 DTO
+                        // Tavily 返回格式通常为: { "results": [ { "title": "...", "content": "...", "url": "..." } ] }
+                        String results = response.get("results").toString();
+
+                        return new WebSearchResultDTO(query,results);
+                    })
+                    .onErrorResume(e -> {
+                        // 异常处理：打印日志或返回空结果
+                        System.err.println("Tavily API 调用失败: " + e.getMessage());
+                        return Mono.just(new WebSearchResultDTO(query, "搜索服务暂时不可用"));
+                    })
+                    .block(); // 注意：在非响应式方法中必须使用 block() 获取结果
+        }
+
     private WebSearchResultDTO executeGoogleSearch(String query, int count) {
         Map<String, Object> paramMap = new HashMap<>();
         paramMap.put("q", query);
         paramMap.put("api_key", googleApiKey);
         paramMap.put("engine", SearchEngine.BAIDU.value);
+//        /api/v1/search
+    }
+
+    public WebSearchResultDTO searchWeb(String query, int count) {
+        // 建议：WebClient 实例应该在类级别初始化或注入
+        WebClient webClient = webClientFactory.getInstance("google");
+
         try {
-            String response = HttpUtil.get(GOOGLE_SEARCH_API_URL, paramMap);
-            // 取出返回结果的前 count 条
+            // 1. 发起同步 GET 请求
+            String response = webClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/api/v1/search")
+                            .queryParam("q", query)
+                            .queryParam("api_key", googleApiKey)
+                            .queryParam("engine", SearchEngine.BAIDU.value)
+                            .build())
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block(); // 将异步转为同步
+
+            // 2. 解析逻辑（沿用你现有的 JSONUtil 逻辑）
             JSONObject jsonObject = JSONUtil.parseObj(response);
-            // 提取 organic_results 部分
             JSONArray organicResults = jsonObject.getJSONArray("organic_results");
-            List<Object> objects = organicResults.subList(0, count);
-            // 拼接搜索结果为字符串
-            String result = objects.stream().map(obj -> {
-                JSONObject tmpJSONObject = (JSONObject) obj;
-                return tmpJSONObject.toString();
-            }).collect(Collectors.joining(","));
+
+            if (organicResults == null || organicResults.isEmpty()) {
+                return new WebSearchResultDTO(query, "");
+            }
+
+            // 3. 截取并拼接结果
+            // 增加对 count 范围的保护，防止下标越界
+            int limit = Math.min(count, organicResults.size());
+            List<Object> subList = organicResults.subList(0, limit);
+
+            String result = subList.stream()
+                    .map(Object::toString)
+                    .collect(Collectors.joining(","));
 
             return new WebSearchResultDTO(query, result);
+
         } catch (Exception e) {
-            return new WebSearchResultDTO(query, "搜索API请求失败，原因是：" + e.getMessage());
+            // 捕获包括网络超时、4xx/5xx 错误、JSON 解析错误在内的所有异常
+            return new WebSearchResultDTO(query, "Search API request fails because:" + e.getMessage());
         }
     }
+
 
     private static class SearchRequest {
         public String query;

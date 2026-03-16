@@ -27,7 +27,7 @@ import java.util.Objects;
 public class ToolFactory {
 
     @Resource
-    ToolEnvProperties properties;
+    WebSearchTool webSearchTool;
     @Resource
     VectorStore vectorStore;
 
@@ -57,7 +57,7 @@ public class ToolFactory {
         Object tool = null;
 
         if (Objects.equals(toolName, WebSearchTool.class.getName())){
-            tool = new WebSearchTool(properties.getGoogleWebSearchApiKey());
+            tool = webSearchTool;
         }
         else if (Objects.equals(toolName, AgenticRAGSearchTool.class.getName())){
             tool = new AgenticRAGSearchTool(vectorStore);
@@ -78,7 +78,7 @@ public class ToolFactory {
 
         if (toolInWebSearch != null) {
             result = toolInWebSearch;
-                resultClass = new WebSearchTool(properties.getGoogleWebSearchApiKey());
+                resultClass = webSearchTool;
         }
 
         if (result == null) {
