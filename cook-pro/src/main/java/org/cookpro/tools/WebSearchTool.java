@@ -147,13 +147,13 @@ public class WebSearchTool {
                     .block(); // 注意：在非响应式方法中必须使用 block() 获取结果
         }
 
-    private WebSearchResultDTO executeGoogleSearch(String query, int count) {
-        Map<String, Object> paramMap = new HashMap<>();
-        paramMap.put("q", query);
-        paramMap.put("api_key", googleApiKey);
-        paramMap.put("engine", SearchEngine.BAIDU.value);
-//        /api/v1/search
-    }
+//    private WebSearchResultDTO executeGoogleSearch(String query, int count) {
+//        Map<String, Object> paramMap = new HashMap<>();
+//        paramMap.put("q", query);
+//        paramMap.put("api_key", googleApiKey);
+//        paramMap.put("engine", SearchEngine.BAIDU.value);
+////        /api/v1/search
+//    }
 
     public WebSearchResultDTO searchWeb(String query, int count) {
         // 建议：WebClient 实例应该在类级别初始化或注入
