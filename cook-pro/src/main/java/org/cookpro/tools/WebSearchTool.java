@@ -116,7 +116,7 @@ public class WebSearchTool {
 
     @Tool(name = "tavily_web_search", description = "Search for information from Tavily Search Engine")
     public WebSearchResultDTO tavilyWebSearch(String query, int count) {
-            // 1. 初始化 WebClient (建议将 webClient 定义为 Bean 注入)
+            // 1. 初始化 WebClient
             WebClient webClient = webClientFactory.getInstance("tavily");
 
             // 2. 构建请求体
@@ -155,7 +155,7 @@ public class WebSearchTool {
 ////        /api/v1/search
 //    }
 
-    public WebSearchResultDTO searchWeb(String query, int count) {
+    public WebSearchResultDTO executeGoogleSearch(String query, int count) {
         // 建议：WebClient 实例应该在类级别初始化或注入
         WebClient webClient = webClientFactory.getInstance("google");
 

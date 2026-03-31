@@ -1,3 +1,10 @@
 #spring:
 #  data:
+#    # MongoDB数据库
 #    mongodb:
+#      host: 127.0.0.1 # 连接地址
+#      port: 27017 # 端口
+#      database: test # 连接数据库
+#      username: root # 用户名
+#      password: "123456" # 密码
+#      authentication-database: admin # 验证数据库（可选）
